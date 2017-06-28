@@ -1,0 +1,22 @@
+import os, time, sys
+import pandas as pd
+import numpy as np
+import tensorflow as tf
+from series_data_generator import series_data_generator
+from hybrid_model import hybrid_model
+from utils import columns
+
+data_path = '/Users/matt.meng/Google_Drive/Taboola/ML/'
+processed_train_file = 'processed_train_data.csv'
+processed_test_file = 'processed_test_data.csv'
+train = pd.read_csv(os.path.join(data_path, processed_train_file))
+test = pd.read_csv(os.path.join(data_path, processed_test_file))
+
+data_generator = series_data_generator(train, columns)
+test_generator = series_data_generator(test, columns)
+
+#tf.reset_default_graph()
+model = hybrid_model()
+#model.train(data_generator)
+model.train(data_generator, test_generator)
+
