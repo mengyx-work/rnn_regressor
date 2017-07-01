@@ -1,22 +1,51 @@
-import os, collections
+import os, yaml, collections
 
 label_col = 'total_views'
 index_col = 'articleId'
-#dep_var_col = 'total_views'
 
-## the namedtuple for data collection
-train_data = collections.namedtuple('train_data', ['time_series_data', 'meta_data', 'target'])
-data_columns = collections.namedtuple('data_columns', ['step_time_strings', 'feature_name_strings', 'meta_data_columns', 'target_column'])
+# the namedtuple for dataset
+train_data = collections.namedtuple('train_data', ['time_series_data',
+                                                   'meta_data',
+                                                   'target'])
+# the namedtuple for column names
+data_columns = collections.namedtuple('data_columns', ['time_step_list',
+                                                       'time_interval_columns',
+                                                       'static_columns',
+                                                       'target_column'])
 
+expected_config_keys = ['index_column', 'label_column',
+                        'static_columns', 'time_interval_columns',
+                        'time_step_list']
+
+
+def create_column_config(yaml_file_path=None):
+    if yaml_file_path is None:
+        yaml_file_path = "./training_configuration.yaml"
+
+    with open(yaml_file_path, 'r') as yaml_file:
+        config_dict = yaml.load(yaml_file)
+
+    for config_key in expected_config_keys:
+        if config_key not in config_dict:
+            raise ValueError("the expected key {} is not found in the configuration yaml file {}....".format(config_key, yaml_file_path))
+
+    columns = data_columns(time_step_list=config_key['time_step_list'],
+                           time_interval_columns=config_key['time_interval_columns'],
+                           static_columns=config_key['static_columns'],
+                           target_column=config_key['label_column'])
+    return columns
+
+'''
 ## a namedtuple of feature names
 independent_features = ['articleInfo_type', 'articleInfo_authorName', 'articleInfo_section', 'minLocalDateInWeek', 'minLocalTime', 'createTime', 'publishTime']
 feature_name_strings = ['views_PageView', 'sessionReferrer_DIRECT_PageView', 'pageReferrer_OTHER_PageView', 'platform_PHON_PageView', 'platform_DESK_PageView', 'sessionReferrer_SEARCH_PageView', 'pageReferrer_SEARCH_PageView', 'platform_TBLT_PageView', 'pageReferrer_DIRECT_PageView', 'sessionReferrer_SOCIAL_PageView', 'pageReferrer_EMPTY_DOMAIN_PageView', 'pageReferrer_SOCIAL_PageView']
 step_time_strings = ['0min_to_10min', '10min_to_20min', '20min_to_30min', '30min_to_40min', '40min_to_50min', '50min_to_60min']
 
-columns = data_columns(step_time_strings = step_time_strings, 
-                       feature_name_strings = feature_name_strings, 
-                       meta_data_columns = independent_features, 
-                       target_column = label_col)
+columns = data_columns(step_time_strings=step_time_strings,
+                       feature_name_strings=feature_name_strings,
+                       meta_data_columns=independent_features,
+                       target_column=label_col)
+'''
 
 
 def clear_folder(absolute_folder_path):
