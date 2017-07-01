@@ -6,6 +6,9 @@ from tensorflow.contrib import layers as tflayers
 
 
 class hybrid_model(object):
+
+    NUM_THREADS = 5
+
     def __init__(self):
 	# Parameters
         self.learning_rate = 0.0001
@@ -26,8 +29,7 @@ class hybrid_model(object):
         #self.log_path = '/Users/matt.meng/Google_Drive/deep_learning/tensorflow/tmp_log/test'
         
         self.model_name = 'hybrid_model'
-        NUM_THREADS = 5
-        self.config = tf.ConfigProto(intra_op_parallelism_threads=NUM_THREADS)
+        self.config = tf.ConfigProto(intra_op_parallelism_threads=self.NUM_THREADS)
 
         self.x = tf.placeholder("float", [None, self.n_steps, self.n_input], name='input_X')
         self.meta_x = tf.placeholder("float", [None, self.n_meta_input], name='input_meta_X')
@@ -82,7 +84,7 @@ class hybrid_model(object):
     def build(self):
         clear_folder(self.log_path)
         clear_folder(self.model_path)
-        ## build the model
+        # build the model
         self.pred = self.RNN(self.x, self.meta_x, self.model_name, self.FC_layers)
         #tf.identity(self.pred, name="pred_op")
         print 'the pred operator name: ', self.pred.name
@@ -128,13 +130,12 @@ class hybrid_model(object):
                         ## to validate using test data
                         if test_data_generator is not None:
                             test_data = test_data_generator.next_batch(self.test_batch_size)
-                            summary, test_rmse = sess.run([merged, self.eval_op], 
-                                                            feed_dict={ self.x: test_data.time_series_data, 
-                                                                        self.meta_x: test_data.meta_data, 
-                                                                        self.y: test_data.target})
+                            summary, test_rmse = sess.run([merged, self.eval_op],
+                                                          feed_dict={self.x: test_data.time_series_data,
+                                                                     self.meta_x: test_data.meta_data,
+                                                                     self.y: test_data.target})
                         writer.add_summary(summary, step)
                         self.saver.save(sess, self.model_path + 'tensorflow_model', global_step=step)
-
                         print "Iter {} Minibatch, train RMSE: {}, test RMSE: {}".format(step * self.batch_size, str(test_rmse), str(train_rmse))
 
                     step += 1

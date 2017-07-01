@@ -1,5 +1,4 @@
 import os, time, sys
-import numpy as np
 import pandas as pd
 from columns_processor import categorical_columns_processor
 
@@ -8,7 +7,6 @@ from src.validation_tools import create_validation_index
 
 label_col = 'total_views'
 index_col = 'articleId'
-#dep_var_col = 'total_views'
 
 data_path = '/Users/matt.meng/Google_Drive/Taboola/ML/'
 data_file = 'combined_data_60min_exposure_10min_window_24hr_target.csv'
@@ -21,7 +19,7 @@ frac = 0.6
 train_index, valid_index = create_validation_index(data, label_col, frac, to_shuffle=True, group_by_dep_var=False)
 
 valid_data  = data.ix[valid_index]
-train       = data.ix[train_index]
+train = data.ix[train_index]
 valid_label = valid_data[label_col]
 print train.shape
 print valid_data.shape
