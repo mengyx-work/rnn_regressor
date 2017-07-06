@@ -1,7 +1,12 @@
 import os, yaml, collections
 
-label_col = 'total_views'
-index_col = 'articleId'
+EXPECTED_CONFIG_KEYS = ['index_column',
+                        'label_column',
+                        'static_columns',
+                        'time_interval_columns',
+                        'time_step_list']
+
+CONFIG_FILE_NAME = "training_configuration.yaml"
 
 # the namedtuple for dataset
 train_data = collections.namedtuple('train_data', ['time_series_data',
@@ -13,19 +18,19 @@ data_columns = collections.namedtuple('data_columns', ['time_step_list',
                                                        'static_columns',
                                                        'target_column'])
 
-expected_config_keys = ['index_column', 'label_column',
-                        'static_columns', 'time_interval_columns',
-                        'time_step_list']
-
 
 def create_column_config(yaml_file_path=None):
+
     if yaml_file_path is None:
-        yaml_file_path = "./training_configuration.yaml"
+        yaml_file_path = os.path.join("./", CONFIG_FILE_NAME)
+
+    if not os.path.exists(yaml_file_path):
+        raise ValueError("failed to locate the configuration yaml file {}...".format(yaml_file_path))
 
     with open(yaml_file_path, 'r') as yaml_file:
         config_dict = yaml.load(yaml_file)
 
-    for config_key in expected_config_keys:
+    for config_key in EXPECTED_CONFIG_KEYS:
         if config_key not in config_dict:
             raise ValueError("the expected key {} is not found in the configuration yaml file {}....".format(config_key, yaml_file_path))
 
