@@ -114,8 +114,8 @@ class hybrid_model(object):
         self.build()
         self.create_eval_op()
         init = tf.global_variables_initializer()
-        self.saver = tf.train.Saver(max_to_keep=5, keep_checkpoint_every_n_hours=1)
-        
+        saver = tf.train.Saver(max_to_keep=5, keep_checkpoint_every_n_hours=1)
+
         print 'models to be written into: ', self.model_path
         print 'logs to be written into: ', self.log_path
         merged = tf.summary.merge_all()  
@@ -144,7 +144,7 @@ class hybrid_model(object):
                                                                      self.meta_x: test_data.meta_data,
                                                                      self.y: test_data.target})
                         writer.add_summary(summary, step)
-                        self.saver.save(sess, self.model_path + 'tensorflow_model', global_step=step)
+                        saver.save(sess, self.model_path + 'tensorflow_model', global_step=step)
                         print "Iter {} Minibatch, train RMSE: {}, test RMSE: {}".format(step * self.batch_size,
                                                                                         str(test_rmse),
                                                                                         str(train_rmse))

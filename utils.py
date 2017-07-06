@@ -20,6 +20,15 @@ data_columns = collections.namedtuple('data_columns', ['time_step_list',
 
 
 def create_column_config(yaml_file_path=None):
+    """function to load the configuration yaml file, create and
+    return a `data_columns` named tuple.
+
+    Args:
+        yaml_file_path (String) : the file path for a yaml file
+
+    Returns:
+        a `data_columns` named tuple.
+    """
 
     if yaml_file_path is None:
         yaml_file_path = os.path.join("./", CONFIG_FILE_NAME)
@@ -40,17 +49,18 @@ def create_column_config(yaml_file_path=None):
                            target_column=config_dict['label_column'])
     return columns
 
-'''
-## a namedtuple of feature names
-independent_features = ['articleInfo_type', 'articleInfo_authorName', 'articleInfo_section', 'minLocalDateInWeek', 'minLocalTime', 'createTime', 'publishTime']
-feature_name_strings = ['views_PageView', 'sessionReferrer_DIRECT_PageView', 'pageReferrer_OTHER_PageView', 'platform_PHON_PageView', 'platform_DESK_PageView', 'sessionReferrer_SEARCH_PageView', 'pageReferrer_SEARCH_PageView', 'platform_TBLT_PageView', 'pageReferrer_DIRECT_PageView', 'sessionReferrer_SOCIAL_PageView', 'pageReferrer_EMPTY_DOMAIN_PageView', 'pageReferrer_SOCIAL_PageView']
-step_time_strings = ['0min_to_10min', '10min_to_20min', '20min_to_30min', '30min_to_40min', '40min_to_50min', '50min_to_60min']
 
-columns = data_columns(step_time_strings=step_time_strings,
-                       feature_name_strings=feature_name_strings,
-                       meta_data_columns=independent_features,
-                       target_column=label_col)
-'''
+def full_column_name_by_time(col_prefix, time_stamp_appendix):
+    return "{}_{}".format(col_prefix, time_stamp_appendix)
+
+
+def all_expected_data_columns():
+    columns = create_column_config()
+    expected_columns = columns.static_columns + [columns.target_column]
+    for time_stamp in columns.time_step_list:
+        for name in columns.time_interval_columns:
+            expected_columns.append(full_column_name_by_time(name, time_stamp))
+    return expected_columns
 
 
 def clear_folder(absolute_folder_path):

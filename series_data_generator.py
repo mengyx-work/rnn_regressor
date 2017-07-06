@@ -1,4 +1,4 @@
-from utils import train_data
+from utils import train_data, full_column_name_by_time
 
 
 class SeriesDataGenerator(object):
@@ -33,7 +33,7 @@ class SeriesDataGenerator(object):
         for time_stamp in self.data_columns.time_step_list:
             single_step_column_name = []
             for name in self.data_columns.time_interval_columns:
-                single_step_column_name.append(name + '_' + time_stamp)
+                single_step_column_name.append(full_column_name_by_time(name, time_stamp))
             column_names.append(single_step_column_name)
         return column_names
 
