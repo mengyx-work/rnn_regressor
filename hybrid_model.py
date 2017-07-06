@@ -44,7 +44,6 @@ class hybrid_model(object):
         
         self.model_name = 'hybrid_model'
         self.config = tf.ConfigProto(intra_op_parallelism_threads=self.NUM_THREADS)
-        self.saver = tf.train.Saver(max_to_keep=5, keep_checkpoint_every_n_hours=1)
         # model placeholders
         self.x = tf.placeholder("float", [None, self.n_steps, self.n_input], name='input_X')
         self.meta_x = tf.placeholder("float", [None, self.n_meta_input], name='input_meta_X')
@@ -59,8 +58,7 @@ class hybrid_model(object):
         #tf.summary.scalar('{}_min'.format(name), tf.reduce_min(var))
         tf.summary.histogram('{}_histogram'.format(name), var)
 
-    @staticmethod
-    def RNN(X, meta_X, model_name='TF_model', layers=[16, 1]):
+    def RNN(self, X, meta_X, model_name='TF_model', layers=[16, 1]):
         """ build the RNN model graph
 
         Given placeholders `X` and `meta_X`, as well as a list `layer` to
@@ -116,7 +114,8 @@ class hybrid_model(object):
         self.build()
         self.create_eval_op()
         init = tf.global_variables_initializer()
-
+        self.saver = tf.train.Saver(max_to_keep=5, keep_checkpoint_every_n_hours=1)
+        
         print 'models to be written into: ', self.model_path
         print 'logs to be written into: ', self.log_path
         merged = tf.summary.merge_all()  

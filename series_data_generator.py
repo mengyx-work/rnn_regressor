@@ -22,10 +22,10 @@ class SeriesDataGenerator(object):
         self.data = data
         self.data_columns = data_columns
         self.index_counter = -1
-        self.total_row_counts = self._get_total_counts()
+        self.total_row_counts = self.get_total_counts()
         self.time_series_column_names = self._build_time_series_column_names()
 
-    def _get_total_counts(self):
+    def get_total_counts(self):
         return self.data.shape[0]
 
     def _build_time_series_column_names(self):

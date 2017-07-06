@@ -34,10 +34,10 @@ def create_column_config(yaml_file_path=None):
         if config_key not in config_dict:
             raise ValueError("the expected key {} is not found in the configuration yaml file {}....".format(config_key, yaml_file_path))
 
-    columns = data_columns(time_step_list=config_key['time_step_list'],
-                           time_interval_columns=config_key['time_interval_columns'],
-                           static_columns=config_key['static_columns'],
-                           target_column=config_key['label_column'])
+    columns = data_columns(time_step_list=config_dict['time_step_list'],
+                           time_interval_columns=config_dict['time_interval_columns'],
+                           static_columns=config_dict['static_columns'],
+                           target_column=config_dict['label_column'])
     return columns
 
 '''
