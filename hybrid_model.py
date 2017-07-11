@@ -37,7 +37,7 @@ class hybrid_model(object):
         self.n_meta_input = len(config.static_columns)  # dimension of meta input (categorical features)
         self.n_steps = len(config.time_step_list)  # time-steps in RNN
 
-        self.model_path = os.path.expanduser("~") + 'tensorflow_models/'
+        self.model_path = os.path.join(os.path.expanduser("~"), 'tensorflow_models')
         self.log_path = os.path.join(self.model_path, 'tensorflow_log')
         
         self.model_name = 'hybrid_model'
