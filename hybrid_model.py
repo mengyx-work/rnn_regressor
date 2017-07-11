@@ -23,13 +23,13 @@ class hybrid_model(object):
 
     def __init__(self, config_dict):
         # Parameters
-        self.learning_rate = 0.0001
+        self.learning_rate = 0.001
         self.num_epochs = 100
         self.batch_size = 1
         self.test_batch_size = 50
         self.display_step = 200
 
-        self.n_hidden = 32  # hidden layer dimension
+        self.n_hidden = 4  # hidden layer dimension
         self.FC_layers = [16, 1]
 
         config = create_column_config(config_dict.copy())
