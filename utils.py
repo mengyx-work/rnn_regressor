@@ -1,12 +1,4 @@
-import os, yaml, collections
-
-EXPECTED_CONFIG_KEYS = ['index_column',
-                        'label_column',
-                        'static_columns',
-                        'time_interval_columns',
-                        'time_step_list']
-
-CONFIG_FILE_NAME = "training_configuration.yaml"
+import os, collections
 
 # the namedtuple for dataset
 train_data = collections.namedtuple('train_data', ['time_series_data',
@@ -19,30 +11,29 @@ data_columns = collections.namedtuple('data_columns', ['time_step_list',
                                                        'target_column'])
 
 
-def create_column_config(yaml_file_path=None):
+def check_expected_config_keys(local_config_dict, expected_keys):
+    for key in expected_keys:
+        if key not in local_config_dict:
+            raise ValueError('failed to find necessary key {} in config_dict...'.format(key))
+
+
+def create_column_config(config_dict):
     """function to load the configuration yaml file, create and
     return a `data_columns` named tuple.
 
     Args:
-        yaml_file_path (String) : the file path for a yaml file
+        config_dict (Dict) : the dict from configuration yaml file
 
     Returns:
         a `data_columns` named tuple.
     """
 
-    if yaml_file_path is None:
-        yaml_file_path = os.path.join("./", CONFIG_FILE_NAME)
-
-    if not os.path.exists(yaml_file_path):
-        raise ValueError("failed to locate the configuration yaml file {}...".format(yaml_file_path))
-
-    with open(yaml_file_path, 'r') as yaml_file:
-        config_dict = yaml.load(yaml_file)
-
-    for config_key in EXPECTED_CONFIG_KEYS:
-        if config_key not in config_dict:
-            raise ValueError("the expected key {} is not found in the configuration yaml file {}....".format(config_key, yaml_file_path))
-
+    expected_keys = ['index_column',
+                     'label_column',
+                     'static_columns',
+                     'time_interval_columns',
+                     'time_step_list']
+    check_expected_config_keys(config_dict, expected_keys)
     columns = data_columns(time_step_list=config_dict['time_step_list'],
                            time_interval_columns=config_dict['time_interval_columns'],
                            static_columns=config_dict['static_columns'],
@@ -54,11 +45,10 @@ def full_column_name_by_time(col_prefix, time_stamp_appendix):
     return "{}_{}".format(col_prefix, time_stamp_appendix)
 
 
-def all_expected_data_columns():
-    columns = create_column_config()
-    expected_columns = columns.static_columns + [columns.target_column]
-    for time_stamp in columns.time_step_list:
-        for name in columns.time_interval_columns:
+def all_expected_data_columns(config_dict):
+    expected_columns = config_dict['static_columns'] + [config_dict['label_column']]
+    for time_stamp in config_dict['time_step_list']:
+        for name in config_dict['time_interval_columns']:
             expected_columns.append(full_column_name_by_time(name, time_stamp))
     return expected_columns
 
@@ -66,6 +56,7 @@ def all_expected_data_columns():
 def clear_folder(absolute_folder_path):
     if not os.path.exists(absolute_folder_path):
         os.makedirs(absolute_folder_path)
+        return
     for file_name in os.listdir(absolute_folder_path):
         file_path = os.path.join(absolute_folder_path, file_name)
         try:

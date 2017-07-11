@@ -21,7 +21,7 @@ class hybrid_model(object):
     """
     NUM_THREADS = 5
 
-    def __init__(self):
+    def __init__(self, config_dict):
         # Parameters
         self.learning_rate = 0.0001
         self.num_epochs = 100
@@ -32,15 +32,13 @@ class hybrid_model(object):
         self.n_hidden = 32  # hidden layer dimension
         self.FC_layers = [16, 1]
 
-        config = create_column_config()
+        config = create_column_config(config_dict.copy())
         self.n_input = len(config.time_interval_columns)  # dimension of each time_step input
         self.n_meta_input = len(config.static_columns)  # dimension of meta input (categorical features)
         self.n_steps = len(config.time_step_list)  # time-steps in RNN
 
-        self.model_path = '/Users/matt.meng/Google_Drive/deep_learning/tensorflow/storage/'
+        self.model_path = os.path.expanduser("~") + 'tensorflow_models/'
         self.log_path = os.path.join(self.model_path, 'tensorflow_log')
-        #self.model_path = '/Users/matt.meng/Google_Drive/deep_learning/tensorflow/tmp'
-        #self.log_path = '/Users/matt.meng/Google_Drive/deep_learning/tensorflow/tmp_log/test'
         
         self.model_name = 'hybrid_model'
         self.config = tf.ConfigProto(intra_op_parallelism_threads=self.NUM_THREADS)
@@ -144,7 +142,7 @@ class hybrid_model(object):
                                                                      self.meta_x: test_data.meta_data,
                                                                      self.y: test_data.target})
                         writer.add_summary(summary, step)
-                        saver.save(sess, self.model_path + 'tensorflow_model', global_step=step)
+                        saver.save(sess, os.path.join(self.model_path, 'tensorflow_model'), global_step=step)
                         print "Iter {} Minibatch, train RMSE: {}, test RMSE: {}".format(step * self.batch_size,
                                                                                         str(test_rmse),
                                                                                         str(train_rmse))
