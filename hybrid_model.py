@@ -1,4 +1,4 @@
-import os
+import os, multiprocessing
 from utils import create_column_config
 from utils import clear_folder
 import tensorflow as tf
@@ -19,7 +19,7 @@ class hybrid_model(object):
         n_input (int) : the dimension of input vector, in this model
 
     """
-    NUM_THREADS = 5
+    NUM_THREADS = 2 * multiprocessing.cpu_count()
 
     def __init__(self, config_dict):
         # Parameters
