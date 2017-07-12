@@ -22,7 +22,6 @@ def create_train_valid_data(data_path, config_dict, frac=0.6):
         if column not in data.columns:
             raise ValueError("failed to find column {} in data {}".format(column, data_path))
     train_index, valid_index = _create_validation_index(data, config_dict["label_column"], frac, to_shuffle=False, group_by_dep_var=False)
-    print len(train_index), len(valid_index)
     valid_data = data.loc[valid_index]
     train = data.loc[train_index]
     print "split by fraction {}, training #rows: {}, validation #rows: {}".format(frac, train.shape[0], valid_data.shape[0])
@@ -56,10 +55,7 @@ def _create_validation_index(df, dep_var_name, train_frac=0.8, to_shuffle=False,
             valid_index.extend(group[index_length:].index.tolist())
 
     train_index = df.index.to_series().sample(int(df.shape[0] * 1. * train_frac), replace=False)
-    print len(set(df.index.to_series())), df.shape[0]
-    #print '#valid: ', df.shape[0] - len(train_index)
     valid_index = list(set(df.index.to_series()) - set(train_index))
-
     # shuffle the training and test data in place
     if to_shuffle:
         shuffle(train_index)
