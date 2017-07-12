@@ -1,6 +1,6 @@
 import os, multiprocessing
-from utils import create_column_config
 from utils import clear_folder
+from google_cloud_storage_util import GCS_Bucket
 import tensorflow as tf
 from tensorflow.contrib import rnn
 from tensorflow.contrib import layers as tflayers
@@ -20,27 +20,28 @@ class hybrid_model(object):
 
     """
     NUM_THREADS = 2 * multiprocessing.cpu_count()
+    COMMON_PATH = os.path.join(os.path.expanduser("~"), 'local_tensorflow_content')
 
-    def __init__(self, config_dict):
+    def __init__(self, config_dict, model_name='hybrid_model'):
         # Parameters
         self.learning_rate = 0.001
-        self.num_epochs = 100
-        self.batch_size = 1
+        self.num_epochs = 1
+        self.batch_size = 50
         self.test_batch_size = 50
         self.display_step = 200
+        self.gcs_bucket = GCS_Bucket("newsroom-backend")
 
         self.n_hidden = 4  # hidden layer dimension
         self.FC_layers = [16, 1]
 
-        config = create_column_config(config_dict.copy())
-        self.n_input = len(config.time_interval_columns)  # dimension of each time_step input
-        self.n_meta_input = len(config.static_columns)  # dimension of meta input (categorical features)
-        self.n_steps = len(config.time_step_list)  # time-steps in RNN
+        self.n_input = len(config_dict["time_interval_columns"])  # dimension of each time_step input
+        self.n_meta_input = len(config_dict["static_columns"])  # dimension of meta input (categorical features)
+        self.n_steps = len(config_dict["time_step_list"])  # time-steps in RNN
+        self.model_name = model_name
 
-        self.model_path = os.path.join(os.path.expanduser("~"), 'tensorflow_models')
-        self.log_path = os.path.join(self.model_path, 'tensorflow_log')
+        self.model_path = os.path.join(self.COMMON_PATH, self.model_name)
+        self.log_path = os.path.join(self.model_path, 'log')
         
-        self.model_name = 'hybrid_model'
         self.config = tf.ConfigProto(intra_op_parallelism_threads=self.NUM_THREADS)
         # model placeholders
         self.x = tf.placeholder("float", [None, self.n_steps, self.n_input], name='input_X')
@@ -148,6 +149,7 @@ class hybrid_model(object):
                                                                                         str(train_rmse))
 
                     step += 1
+                saver.save(sess, os.path.join(self.model_path, 'final_model'), global_step=step)
                 print "Optimization Finished!"
 
 

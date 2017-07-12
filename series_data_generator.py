@@ -13,14 +13,14 @@ class SeriesDataGenerator(object):
 
     Attributes:
         data (pd.DataFrame): the training/test data
-        data_columns (namedTuple): contains different lists of columns names
+        config_dict (Dict): dict contains different lists of columns names
         time_series_column_names (list of list): the time series columns in sequence, created by
         function `_build_time_series_column_names`
     """
 
-    def __init__(self, data, data_columns):
+    def __init__(self, data, config_dict):
         self.data = data
-        self.data_columns = data_columns
+        self.config_dict = config_dict.copy()
         self.index_counter = -1
         self.total_row_counts = self.get_total_counts()
         self.time_series_column_names = self._build_time_series_column_names()
@@ -30,9 +30,9 @@ class SeriesDataGenerator(object):
 
     def _build_time_series_column_names(self):
         column_names = []
-        for time_stamp in self.data_columns.time_step_list:
+        for time_stamp in self.config_dict['time_step_list']:
             single_step_column_name = []
-            for name in self.data_columns.time_interval_columns:
+            for name in self.config_dict["time_interval_columns"]:
                 single_step_column_name.append(full_column_name_by_time(name, time_stamp))
             column_names.append(single_step_column_name)
         return column_names
@@ -67,8 +67,6 @@ class SeriesDataGenerator(object):
         # build the meta_data and target
         meta_data, target = [], []
         for cur_index in index_list:
-            meta_data.append(self.data.iloc[cur_index][self.data_columns.static_columns].tolist())
-            target.append([self.data.iloc[cur_index][self.data_columns.target_column]])
-            #meta_data.append(self.data.ix[cur_index, self.data_columns.static_columns].tolist())
-            #target.append([self.data.ix[cur_index, self.data_columns.target_column]])
+            meta_data.append(self.data.iloc[cur_index][self.config_dict["static_columns"]].tolist())
+            target.append([self.data.iloc[cur_index][self.config_dict["label_column"]]])
         return train_data(time_series_data=time_series_data, meta_data=meta_data, target=target)
