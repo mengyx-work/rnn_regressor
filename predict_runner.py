@@ -11,18 +11,7 @@ model_name = "NYDN_hybrid_model"
 
 config_dict, local_data_file = load_training_data_from_gcs(GCS_path, yaml_file_name)
 train, valid_data = create_train_valid_data(local_data_file, config_dict.copy(), fraction)
-data_generator = SeriesDataGenerator(train, config_dict)
-test_generator = SeriesDataGenerator(valid_data, config_dict)
-try:
-    #tf.reset_default_graph()
-    model = hybrid_model(config_dict, model_name)
-    model.train(data_generator, test_generator)
-except Exception, e:
-    print "found the exception {} in model training.".format(e)
-finally:
-    os.unlink(local_data_file)
-
+local_model_path = hybrid_model(config_dict, model_name).get_model_path()
 pred_op_name = "NYDN_hybrid_model/fully_connect_layer/fully_connect_layer_2/Relu:0"
-local_model_path = model.get_model_path()
 combined_results = model_predict(valid_data, config_dict.copy(), local_model_path, pred_op_name)
 combined_results.to_csv("../combined_pred_results.csv", header=True)

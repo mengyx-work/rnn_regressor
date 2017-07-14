@@ -8,13 +8,27 @@ train_data = collections.namedtuple('train_data', ['time_series_data',
                                                    'target'])
 
 
+def model_meta_file(model_path, file_prefix="final_model"):
+    meta_files = [f for f in os.listdir(model_path) if f[-5:] == '.meta']
+    final_model_files = [f for f in meta_files if file_prefix in f]
+    if len(final_model_files) == 0:
+        raise ValueError("failed to find any model meta files in {}".format(model_path))
+    if len(final_model_files) > 1:
+        print "warning, more than one model meta file is found in {}".format(model_path)
+    return os.path.join(model_path, final_model_files[0])
+
+
+def process_target_list(nested_list):
+    return [elem[0] for elem in nested_list]
+
+
 def check_expected_config_keys(local_config_dict, expected_keys):
     for key in expected_keys:
         if key not in local_config_dict:
             raise ValueError('failed to find necessary key {} in config_dict...'.format(key))
 
 
-def load_data_from_gcs(GCS_path, yaml_file_name):
+def load_training_data_from_gcs(GCS_path, yaml_file_name):
     local_data_file = tempfile.NamedTemporaryFile(delete=True).name
     expected_keys = ["time_interval_columns",
                      "static_columns",

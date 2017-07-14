@@ -1,3 +1,6 @@
+# the script to start tensorboard
+start_tensorboard.sh
+
 # yaml file
 *.yaml
 # to ignore the IntelliJ config folder

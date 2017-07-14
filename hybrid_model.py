@@ -1,9 +1,39 @@
-import os, multiprocessing
-from utils import clear_folder
+import os, stat, multiprocessing
+import pandas as pd
+from utils import clear_folder, model_meta_file, process_target_list
+from series_data_generator import SeriesDataGenerator
 from google_cloud_storage_util import GCS_Bucket
 import tensorflow as tf
 from tensorflow.contrib import rnn
 from tensorflow.contrib import layers as tflayers
+
+
+def model_predict(data, config_dict, local_model_path, pred_op_name):
+    data_generator = SeriesDataGenerator(data, config_dict)
+    data = data_generator.next_batch(data_generator.get_total_counts())
+    with tf.Session() as sess:
+        saver = tf.train.import_meta_graph(model_meta_file(local_model_path))
+        saver.restore(sess, tf.train.latest_checkpoint(local_model_path))
+        # extract the placeholders and pred_op from model
+        pred_op = sess.graph.get_tensor_by_name(pred_op_name)
+        x = sess.graph.get_tensor_by_name("input_X:0")
+        meta_x = sess.graph.get_tensor_by_name("input_meta_X:0")
+        # run the pred_op in session
+        preds = sess.run(pred_op, feed_dict={x: data.time_series_data,
+                                             meta_x: data.meta_data})
+    # combine the prediction and target together
+    combined_data = pd.DataFrame({'pageView': process_target_list(data.target),
+                                  'pred_pageView': process_target_list(preds.tolist())})
+    return combined_data
+
+
+def generate_tensorboard_script(logdir):
+    file_name = "start_tensorboard.sh"
+    with open(file_name, "w") as text_file:
+        text_file.write("#!/bin/bash \n")
+        text_file.write("tensorboard --logdir={}".format(logdir))
+    st = os.stat(file_name)
+    os.chmod(file_name, st.st_mode | stat.S_IEXEC)
 
 
 class hybrid_model(object):
@@ -25,9 +55,9 @@ class hybrid_model(object):
     def __init__(self, config_dict, model_name='hybrid_model'):
         # Parameters
         self.learning_rate = 0.001
-        self.num_epochs = 10
+        self.num_epochs = 1
         self.batch_size = 1
-        self.test_batch_size = 50
+        self.test_batch_size = 500
         self.display_step = 100
         self.gcs_bucket = GCS_Bucket("newsroom-backend")
 
@@ -41,20 +71,28 @@ class hybrid_model(object):
 
         self.model_path = os.path.join(self.COMMON_PATH, self.model_name)
         self.log_path = os.path.join(self.model_path, 'log')
-        
+        generate_tensorboard_script(self.log_path)  # create the script to start a tensorboard session
         self.config = tf.ConfigProto(intra_op_parallelism_threads=self.NUM_THREADS)
         # model placeholders
         self.x = tf.placeholder("float", [None, self.n_steps, self.n_input], name='input_X')
         self.meta_x = tf.placeholder("float", [None, self.n_meta_input], name='input_meta_X')
         self.y = tf.placeholder("float", [None, 1], name='input_y')
-        self.init = tf.global_variables_initializer()
+
+    def get_model_path(self):
+        return self.model_path
+
+    @staticmethod
+    def single_variable_summary(var, name):
+        reduce_mean = tf.reduce_mean(var)
+        tf.summary.scalar('{}_reduce_mean'.format(name), reduce_mean)
+        tf.summary.histogram('{}_histogram'.format(name), var)
 
     @staticmethod
     def variable_summaries(var, name):
-        mean = tf.reduce_mean(var)
-        tf.summary.scalar('{}_mean'.format(name), mean)
-        #tf.summary.scalar('{}_max'.format(name), tf.reduce_max(var))
-        #tf.summary.scalar('{}_min'.format(name), tf.reduce_min(var))
+        reduce_mean = tf.reduce_mean(var)
+        tf.summary.scalar('{}_reduce_mean'.format(name), reduce_mean)
+        tf.summary.scalar('{}_max'.format(name), tf.reduce_max(var))
+        tf.summary.scalar('{}_min'.format(name), tf.reduce_min(var))
         tf.summary.histogram('{}_histogram'.format(name), var)
 
     def RNN(self, X, meta_X, model_name='TF_model', layers=[16, 1]):
@@ -87,66 +125,75 @@ class hybrid_model(object):
             return output
 
     def build(self):
-        clear_folder(self.log_path)
-        clear_folder(self.model_path)
         # build the model
         self.pred = self.RNN(self.x, self.meta_x, self.model_name, self.FC_layers)
-        print 'the predict tensor: ', self.pred
+        print 'the predicting tensor: ', self.pred
         with tf.name_scope('loss'):
             loss = tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(self.y, self.pred))) / self.batch_size)
-            self.variable_summaries(loss, 'RMSE_loss')
+            self.single_variable_summary(loss, 'RMSE_loss')
         with tf.name_scope('optimizer'):
             #optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(loss)
             #optimizer = tf.train.MomentumOptimizer(learning_rate, 0.5).minimize(loss)
             optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(loss)
             print 'optimizer name: ',  optimizer.name
-            self.optimizer = optimizer
+        return optimizer
 
     def create_eval_op(self):
-        with tf.name_scope('root_mean_square_error'):
+        with tf.name_scope('eval_op'):
             eval_op = tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(self.y, self.pred))) / self.batch_size)
-            self.variable_summaries(eval_op, 'RMSE_eval')
+            self.single_variable_summary(eval_op, 'RMSE')
             #print 'eval_op name: ',  eval_op.name
-            self.eval_op = eval_op
+        return eval_op
 
     def train(self, data_generator, test_data_generator=None):
-        self.build()
-        self.create_eval_op()
+        clear_folder(self.log_path)
+        clear_folder(self.model_path)
+        optimizer = self.build()  # the optimizer for model building
+        eval_op = self.create_eval_op()  # this eval operation gives a specific list of results
         init = tf.global_variables_initializer()
         saver = tf.train.Saver(max_to_keep=5, keep_checkpoint_every_n_hours=1)
 
         print 'models to be written into: ', self.model_path
         print 'logs to be written into: ', self.log_path
-        merged = tf.summary.merge_all()  
         writer = tf.summary.FileWriter(self.log_path)
         with tf.Session(config=self.config) as sess:
             # Launch the graph
             sess.run(init)
             step = 1
-            test_rmse = "unavailable"
+            train_rmse, test_rmse = "unavailable", "unavailable"
             writer.add_graph(sess.graph)
+            with tf.name_scope('weight_matrix'):
+                weight_matrix = sess.graph.get_tensor_by_name("fully_connect_layer/fully_connect_layer_2/weights:0")
+                self.variable_summaries(weight_matrix, 'weight_matrix')
+            merged_summary_op = tf.summary.merge_all()
+
             with tf.name_scope('training'):    
                 while step * self.batch_size < self.num_epochs * data_generator.get_total_counts():
                     data = data_generator.next_batch(self.batch_size)
-                    sess.run(self.optimizer, feed_dict={self.x: data.time_series_data,
-                                                        self.meta_x: data.meta_data,
-                                                        self.y: data.target})
+                    sess.run(optimizer, feed_dict={self.x: data.time_series_data,
+                                                   self.meta_x: data.meta_data,
+                                                   self.y: data.target})
+
                     if step % self.display_step == 0:
-                        summary, train_rmse = sess.run([merged, self.eval_op], feed_dict={self.x: data.time_series_data,
-                                                                                          self.meta_x: data.meta_data,
-                                                                                          self.y: data.target})
                         # to validate using test data
                         if test_data_generator is not None:
-                            test_data = test_data_generator.next_batch(self.test_batch_size)
-                            summary, test_rmse = sess.run([merged, self.eval_op],
+                            #test_data = test_data_generator.next_batch(self.test_batch_size)
+                            # use all the test data every time
+                            test_data = test_data_generator.next_batch(test_data_generator.get_total_counts())
+                            summary, test_rmse = sess.run([merged_summary_op, eval_op],
                                                           feed_dict={self.x: test_data.time_series_data,
                                                                      self.meta_x: test_data.meta_data,
                                                                      self.y: test_data.target})
+                        else:
+                            summary, train_rmse = sess.run([merged_summary_op, eval_op],
+                                                           feed_dict={self.x: data.time_series_data,
+                                                                      self.meta_x: data.meta_data,
+                                                                      self.y: data.target})
                         writer.add_summary(summary, step)
-                        saver.save(sess, os.path.join(self.model_path, 'tensorflow_model'), global_step=step)
-                        print "Iter {} Minibatch, train RMSE: {}, test RMSE: {}".format(step * self.batch_size,
-                                                                                        str(test_rmse),
-                                                                                        str(train_rmse))
+                        saver.save(sess, os.path.join(self.model_path, 'models'), global_step=step)
+                        print "Iter {}, train RMSE: {}, test RMSE: {}".format(step * self.batch_size,
+                                                                              str(train_rmse),
+                                                                              str(test_rmse))
 
                     step += 1
                 saver.save(sess, os.path.join(self.model_path, 'final_model'), global_step=step)
