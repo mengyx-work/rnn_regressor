@@ -25,13 +25,13 @@ class hybrid_model(object):
     def __init__(self, config_dict, model_name='hybrid_model'):
         # Parameters
         self.learning_rate = 0.001
-        self.num_epochs = 1
-        self.batch_size = 50
+        self.num_epochs = 10
+        self.batch_size = 1
         self.test_batch_size = 50
-        self.display_step = 200
+        self.display_step = 20
         self.gcs_bucket = GCS_Bucket("newsroom-backend")
 
-        self.n_hidden = 4  # hidden layer dimension
+        self.n_hidden = 8  # hidden layer dimension
         self.FC_layers = [16, 1]
 
         self.n_input = len(config_dict["time_interval_columns"])  # dimension of each time_step input
@@ -91,7 +91,7 @@ class hybrid_model(object):
         clear_folder(self.model_path)
         # build the model
         self.pred = self.RNN(self.x, self.meta_x, self.model_name, self.FC_layers)
-        print 'the pred operator name: ', self.pred.name
+        print 'the predict tensor: ', self.pred
         with tf.name_scope('loss'):
             loss = tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(self.y, self.pred))) / self.batch_size)
             self.variable_summaries(loss, 'RMSE_loss')

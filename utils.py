@@ -15,7 +15,6 @@ def check_expected_config_keys(local_config_dict, expected_keys):
 
 
 def load_data_from_gcs(GCS_path, yaml_file_name):
-    #local_yaml_file = tempfile.NamedTemporaryFile(delete=True).name
     local_data_file = tempfile.NamedTemporaryFile(delete=True).name
     expected_keys = ["time_interval_columns",
                      "static_columns",
