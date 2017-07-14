@@ -28,7 +28,7 @@ class hybrid_model(object):
         self.num_epochs = 10
         self.batch_size = 1
         self.test_batch_size = 50
-        self.display_step = 20
+        self.display_step = 100
         self.gcs_bucket = GCS_Bucket("newsroom-backend")
 
         self.n_hidden = 8  # hidden layer dimension
