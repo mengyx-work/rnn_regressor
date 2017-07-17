@@ -56,13 +56,13 @@ class HybridModel(object):
     NUM_THREADS = 2 * multiprocessing.cpu_count()
     COMMON_PATH = os.path.join(os.path.expanduser("~"), 'local_tensorflow_content')
 
-    def __init__(self, config_dict, model_name='hybrid_model'):
+    def __init__(self, config_dict, model_name='hybrid_model', learning_rate=0.001, batch_size=20):
         # Parameters
-        self.learning_rate = 0.001
-        self.num_epochs = 1
-        self.batch_size = 1
+        self.learning_rate = learning_rate
+        self.batch_size = batch_size
+        self.num_epochs = 100
         self.test_batch_size = 500
-        self.display_step = 100
+        self.display_step = 300
         self.gcs_bucket = GCS_Bucket("newsroom-backend")
 
         self.n_hidden = 8  # hidden layer dimension
