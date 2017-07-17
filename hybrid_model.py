@@ -11,8 +11,8 @@ from tensorflow.contrib import layers as tflayers
 def model_predict(data, config_dict, local_model_path, pred_op_name):
     data_generator = SeriesDataGenerator(data, config_dict)
     data = data_generator.next_batch(data_generator.get_total_counts())
+    saver = tf.train.import_meta_graph(model_meta_file(local_model_path))
     with tf.Session() as sess:
-        saver = tf.train.import_meta_graph(model_meta_file(local_model_path))
         saver.restore(sess, tf.train.latest_checkpoint(local_model_path))
         # extract the placeholders and pred_op from model
         pred_op = sess.graph.get_tensor_by_name(pred_op_name)
@@ -177,7 +177,6 @@ class hybrid_model(object):
                     if step % self.display_step == 0:
                         # to validate using test data
                         if test_data_generator is not None:
-                            #test_data = test_data_generator.next_batch(self.test_batch_size)
                             # use all the test data every time
                             test_data = test_data_generator.next_batch(test_data_generator.get_total_counts())
                             summary, test_rmse = sess.run([merged_summary_op, eval_op],
