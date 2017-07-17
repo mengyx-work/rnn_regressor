@@ -31,6 +31,10 @@ def create_local_model_path(common_path, model_name):
     return os.path.join(common_path, model_name)
 
 
+def create_local_log_path(common_path, model_name):
+    return os.path.join(common_path, model_name, "log")
+
+
 def generate_tensorboard_script(logdir):
     file_name = "start_tensorboard.sh"
     with open(file_name, "w") as text_file:
@@ -62,7 +66,7 @@ class HybridModel(object):
         self.batch_size = batch_size
         self.num_epochs = 100
         self.test_batch_size = 500
-        self.display_step = 300
+        self.display_step = 100
         self.gcs_bucket = GCS_Bucket("newsroom-backend")
 
         self.n_hidden = 8  # hidden layer dimension
@@ -74,7 +78,8 @@ class HybridModel(object):
         self.model_name = model_name
 
         self.model_path = create_local_model_path(self.COMMON_PATH, self.model_name)
-        self.log_path = os.path.join(self.model_path, 'log')
+        self.log_path = create_local_log_path(self.COMMON_PATH, self.model_name)
+        #self.log_path = os.path.join(self.model_path, 'log')
         generate_tensorboard_script(self.log_path)  # create the script to start a tensorboard session
         self.config = tf.ConfigProto(intra_op_parallelism_threads=self.NUM_THREADS)
         # model placeholders

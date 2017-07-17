@@ -1,5 +1,6 @@
 # the script to start tensorboard
 start_tensorboard.sh
+start_multi_model_tensorboard.sh
 
 # yaml file
 *.yaml
