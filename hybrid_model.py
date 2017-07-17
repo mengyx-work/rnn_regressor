@@ -27,6 +27,10 @@ def model_predict(data, config_dict, local_model_path, pred_op_name):
     return combined_data
 
 
+def create_local_model_path(common_path, model_name):
+    return os.path.join(common_path, model_name)
+
+
 def generate_tensorboard_script(logdir):
     file_name = "start_tensorboard.sh"
     with open(file_name, "w") as text_file:
@@ -36,7 +40,7 @@ def generate_tensorboard_script(logdir):
     os.chmod(file_name, st.st_mode | stat.S_IEXEC)
 
 
-class hybrid_model(object):
+class HybridModel(object):
     """the hybrid_model as a class
 
     model-independent Attributes:
@@ -69,7 +73,7 @@ class hybrid_model(object):
         self.n_steps = len(config_dict["time_step_list"])  # time-steps in RNN
         self.model_name = model_name
 
-        self.model_path = os.path.join(self.COMMON_PATH, self.model_name)
+        self.model_path = create_local_model_path(self.COMMON_PATH, self.model_name)
         self.log_path = os.path.join(self.model_path, 'log')
         generate_tensorboard_script(self.log_path)  # create the script to start a tensorboard session
         self.config = tf.ConfigProto(intra_op_parallelism_threads=self.NUM_THREADS)
