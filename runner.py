@@ -6,7 +6,7 @@ from data_preprocess import create_train_valid_data
 
 GCS_path = 'test/ML'
 yaml_file_name = 'training_configuration.yaml'
-fraction = 0.7
+fraction = 0.8
 config_dict, local_data_file = load_training_data_from_gcs(GCS_path, yaml_file_name)
 train, valid_data = create_train_valid_data(local_data_file, config_dict.copy(), fraction)
 
