@@ -2,8 +2,8 @@ import subprocess
 from hybrid_model import HybridModel, create_local_log_path, generate_multi_model_tensorboard_script
 
 common_command_line = ["python", "runner.py"]
-learning_rate_list = [0.00001, 0.0001, 0.001, 0.01]
-batch_size_list = [100]
+learning_rate_list = [0.005, 0.001, 0.0005]
+batch_size_list = [10, 50, 100, 200, 500, 1000]
 job_command_list = []
 model_name_list = []
 
@@ -27,7 +27,7 @@ def run_jobs_in_parallel(job_commands, model_name_list):
 
 for learning_rate in learning_rate_list:
     for batch_size in batch_size_list:
-        model_name = "model_learning_rate_{}_batch_size_{}".format(learning_rate, batch_size)
+        model_name = "NYDN_hybrid_model_learning_rate_{}_batch_size_{}".format(learning_rate, batch_size)
         args = {}
         args['--model_name'] = model_name
         args['--learning_rate'] = str(learning_rate)
