@@ -1,5 +1,4 @@
 import os, yaml, tempfile
-from random import shuffle
 import pandas as pd
 from random import shuffle
 from utils import all_expected_data_columns, check_expected_config_keys, GCS_BUCKET_NAME
@@ -7,6 +6,25 @@ from google_cloud_storage_util import GCS_Bucket
 
 
 def create_kfold_data_index_yaml_files(GCS_path, yaml_file_name, yaml_GCS_path, yaml_file_prefix, fold_num):
+    '''function creates multiple idnex yaml files and store them
+    in GCS.
+
+    1. load the config_dict using `GCS_path` and `yaml_file_name`.
+    2. load the full training data using config_dict
+    3. split the data index into `fold_num` buckets and save
+    `train_index` and `test_index` into yaml files
+    4. store these yaml files to GCS
+
+    args:
+        GCS_path (string): the GCS path for model configuration file
+        yaml_file_name (string): yaml configuration file name in GCS
+        yaml_GCS_path (string): the GCS path to store index yaml file
+        yaml_file_prefix: prefix for index yaml file in GCS
+        fold_num (int): the number of folds to split data
+    returns:
+        yaml_file_list (list): a list of yaml files stored in GCS
+        model_name_list (list): a list of model names
+    '''
     config_dict, local_data_file = load_training_data_from_gcs(GCS_path, yaml_file_name)
     index_data = pd.read_csv(local_data_file,
                              index_col=config_dict["index_column"],
