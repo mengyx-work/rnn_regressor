@@ -1,7 +1,7 @@
 import os, argparse
 from series_data_generator import SeriesDataGenerator
 from hybrid_model import HybridModel, model_predict, create_local_model_path
-from utils import load_training_data_from_gcs
+from data_preprocess import load_training_data_from_gcs
 from data_preprocess import create_train_valid_data
 
 GCS_path = 'test/ML'

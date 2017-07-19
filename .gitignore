@@ -4,6 +4,7 @@ start_multi_model_tensorboard.sh
 
 # yaml file
 *.yaml
+*.txt
 # to ignore the IntelliJ config folder
 .idea
 

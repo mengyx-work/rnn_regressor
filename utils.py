@@ -1,11 +1,12 @@
 import os, collections
-import tempfile, yaml
-from google_cloud_storage_util import GCS_Bucket
+
 
 # the namedtuple for dataset
 train_data = collections.namedtuple('train_data', ['time_series_data',
                                                    'meta_data',
                                                    'target'])
+
+GCS_BUCKET_NAME = "newsroom-backend"
 
 
 def model_meta_file(model_path, file_prefix="final_model"):
@@ -26,27 +27,6 @@ def check_expected_config_keys(local_config_dict, expected_keys):
     for key in expected_keys:
         if key not in local_config_dict:
             raise ValueError('failed to find necessary key {} in config_dict...'.format(key))
-
-
-def load_training_data_from_gcs(GCS_path, yaml_file_name):
-    local_data_file = tempfile.NamedTemporaryFile(delete=True).name
-    expected_keys = ["time_interval_columns",
-                     "static_columns",
-                     "time_step_list",
-                     "GCS_path",
-                     "data_file_name",
-                     "label_column",
-                     "index_column"]
-    bucket = GCS_Bucket("newsroom-backend")
-    with tempfile.NamedTemporaryFile(delete=True) as yaml_file:
-        bucket.take("{}/{}".format(GCS_path, yaml_file_name), yaml_file.name)
-        config_dict = yaml.load(yaml_file)
-        print "local yaml file: {}".format(yaml_file.name)
-
-    check_expected_config_keys(config_dict, expected_keys)
-    bucket.take("{}/{}".format(config_dict['GCS_path'], config_dict['data_file_name']), local_data_file)
-    print "local data file: {}".format(local_data_file)
-    return config_dict, local_data_file
 
 
 def full_column_name_by_time(col_prefix, time_stamp_appendix):
