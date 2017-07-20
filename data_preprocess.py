@@ -44,18 +44,17 @@ def create_kfold_data_index_yaml_files(GCS_path, yaml_file_name, yaml_GCS_path, 
             end_index = (i + 1) * chunk_size
         index_dict = {"test_index": index[start_index:end_index],
                       "train_index": index[0:start_index] + index[end_index:tot_length]}
+        # create the index yaml file
         local_yaml_file = tempfile.NamedTemporaryFile(delete=True).name
         model_name = "{}_fold_{}".format(yaml_file_prefix, i + 1)
         yaml_file_name = "{}.yaml".format(model_name)
         model_name_list.append(model_name)
         yaml_file_list.append(yaml_file_name)
-        print local_yaml_file, yaml_file_name
         with open(local_yaml_file, 'w') as yaml_file:
             yaml.dump(index_dict, yaml_file)
         bucket.put(local_yaml_file, "{}/{}".format(yaml_GCS_path, yaml_file_name))
         os.unlink(local_yaml_file)  # remove the local index yaml file
     os.unlink(local_data_file)  # remove the local data
-    print yaml_file_list, model_name_list
     return yaml_file_list, model_name_list
 
 
@@ -72,7 +71,7 @@ def load_training_data_from_gcs(GCS_path, yaml_file_name):
     config_dict = load_yaml_file_from_gcs(bucket, GCS_path, yaml_file_name)
     check_expected_config_keys(config_dict, expected_keys)
     bucket.take("{}/{}".format(config_dict['GCS_path'], config_dict['data_file_name']), local_data_file)
-    print "local data file: {}".format(local_data_file)
+    #print "local data file: {}".format(local_data_file)
     return config_dict, local_data_file
 
 
@@ -80,7 +79,7 @@ def load_yaml_file_from_gcs(bucket, GCS_path, yaml_file_name):
     with tempfile.NamedTemporaryFile(delete=True) as yaml_file:
         bucket.take("{}/{}".format(GCS_path, yaml_file_name), yaml_file.name)
         config_dict = yaml.load(yaml_file)
-        print "local yaml file: {}".format(yaml_file.name)
+        #print "local yaml file: {}".format(yaml_file.name)
     return config_dict
 
 
