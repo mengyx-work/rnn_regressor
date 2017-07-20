@@ -1,4 +1,4 @@
-import subprocess, yaml, sys
+import subprocess, yaml
 from hybrid_model import HybridModel, create_local_log_path, generate_multi_model_tensorboard_script
 
 
