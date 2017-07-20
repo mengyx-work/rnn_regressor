@@ -35,7 +35,7 @@ def main():
         job_command_list.append(command_lines)
 
     print "start running {} jobs".format(len(job_command_list))
-    run_jobs_in_parallel(job_command_list, model_name_list)
+    run_jobs_in_parallel(job_command_list, model_name_list, log_process=True, model_set_name=args.model_name)
 
 if __name__ == '__main__':
     main()
