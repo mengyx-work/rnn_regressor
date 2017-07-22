@@ -5,6 +5,7 @@ from hybrid_model import generate_multi_model_tensorboard_script
 def main():
     model_dict = {}
     for file_name in sys.argv[1:]:
+	print "file name: {}".format(file_name)
         with open(file_name, 'r') as yaml_file:
             single_model_dict = yaml.load(yaml_file)
         model_dict.update(single_model_dict)
