@@ -77,16 +77,17 @@ class HybridModel(object):
         n_input (int) : the dimension of input vector, in this model
 
     """
-    NUM_THREADS = 2 * multiprocessing.cpu_count()
+    #NUM_THREADS = 2 * multiprocessing.cpu_count()
+    NUM_THREADS = multiprocessing.cpu_count()
     COMMON_PATH = os.path.join(os.path.expanduser("~"), 'local_tensorflow_content')
 
     def __init__(self, config_dict, model_name='hybrid_model', learning_rate=0.001, batch_size=20):
         # Parameters
         self.learning_rate = learning_rate
         self.batch_size = batch_size
-        self.num_epochs = 100
+        self.num_epochs = 10
         self.test_batch_size = 500
-        self.display_step = 100
+        self.display_step = 2
         self.gcs_bucket = GCS_Bucket("newsroom-backend")
 
         self.n_hidden = 8  # hidden layer dimension
@@ -147,8 +148,12 @@ class HybridModel(object):
             lstm_cell = rnn.BasicLSTMCell(self.n_hidden, reuse=False)
             # Get LSTM cell output
             outputs, states = rnn.static_rnn(lstm_cell, x, dtype=tf.float32, scope='LSTM_unit')
-            # combine the LSTM unit output with `meta_X`
-            combined_output = tf.concat([outputs[-1], meta_X], 1)    
+            # combine the last LSTM unit output with `meta_X`
+            #combined_output = tf.concat([outputs[-1], meta_X], 1)
+
+            # combine all the LSTM unit output with `meta_X`, similar to an attention model
+            alll_units_output = tf.concat([unit for unit in outputs], 1)
+            combined_output = tf.concat([alll_units_output, meta_X], 1)
             print 'combined output dimension: ', combined_output.shape
             output = tflayers.stack(combined_output, tflayers.fully_connected, layers, scope='fully_connect_layer')
             return output
