@@ -2,8 +2,8 @@ from run_utils import run_jobs_in_parallel
 
 #common_command_line = ["python", "runner.py"]
 common_command_line = ["python", "multi_fold_runner.py"]
-learning_rate_list = [0.005, 0.001, 0.0005]
-batch_size_list = [500]
+learning_rate_list = [0.01, 0.001, 0.0001]
+batch_size_list = [100, 500, 1000]
 job_command_list = []
 model_name_list = []
 GCS_path = 'test/ML'
@@ -21,7 +21,7 @@ for batch_size in batch_size_list:
         args['--gcs_path'] = GCS_path
         args['--yaml_file_name'] = yaml_file_name
         args['--index_gcs_path'] = yaml_GCS_path
-        args['--fold_num'] = str(1)
+        args['--fold_num'] = str(4)
 
         command_lines = common_command_line[:]
         command_lines.extend(reduce(lambda x, y: x + y, args.items()))
