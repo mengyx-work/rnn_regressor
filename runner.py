@@ -21,7 +21,6 @@ def main():
     data_generator = SeriesDataGenerator(train, config_dict)
     test_generator = SeriesDataGenerator(valid_data, config_dict)
     try:
-        #tf.reset_default_graph()
         print "learning rate: {}, batch size: {}".format(args.learning_rate, args.batch_size)
         model = HybridModel(config_dict, args.model_name, learning_rate=args.learning_rate, batch_size=args.batch_size)
         model.train(data_generator, test_generator)

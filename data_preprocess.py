@@ -5,7 +5,7 @@ from utils import all_expected_data_columns, check_expected_config_keys, GCS_BUC
 from google_cloud_storage_util import GCS_Bucket
 
 
-def create_kfold_data_index_yaml_files(GCS_path, yaml_file_name, yaml_GCS_path, yaml_file_prefix, fold_num):
+def create_kfold_data_index_yaml_files(GCS_path, yaml_file_name, yaml_GCS_path, yaml_file_prefix, fold_num, frac=0.8):
     '''function creates multiple idnex yaml files and store them
     in GCS.
 
@@ -37,11 +37,12 @@ def create_kfold_data_index_yaml_files(GCS_path, yaml_file_name, yaml_GCS_path, 
     tot_length = len(index)
     chunk_size = int(tot_length / fold_num)
     for i in range(fold_num):
-        start_index = i * chunk_size
-        if i == (fold_num - 1):
-            end_index = tot_length
+        if fold_num != 1:
+            start_index = i * chunk_size
+            end_index = tot_length if i == (fold_num - 1) else (i + 1) * chunk_size
         else:
-            end_index = (i + 1) * chunk_size
+            start_index = int(frac * tot_length)
+            end_index = tot_length
         index_dict = {"test_index": index[start_index:end_index],
                       "train_index": index[0:start_index] + index[end_index:tot_length]}
         # create the index yaml file
