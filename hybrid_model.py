@@ -163,7 +163,7 @@ class HybridModel(object):
         self.pred = self.RNN(self.x, self.meta_x, self.model_name, self.FC_layers)
         print 'the predicting tensor: ', self.pred
         with tf.name_scope('loss'):
-            loss = tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(self.y, self.pred))) / self.batch_size)
+            loss = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(self.y, self.pred))) / self.batch_size)
             self.single_variable_summary(loss, 'RMSE_loss')
         with tf.name_scope('optimizer'):
             #optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(loss)
@@ -174,7 +174,7 @@ class HybridModel(object):
 
     def create_eval_op(self):
         with tf.name_scope('eval_op'):
-            eval_op = tf.sqrt(tf.reduce_mean(tf.square(tf.subtract(self.y, self.pred))) / self.batch_size)
+            eval_op = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(self.y, self.pred))) / self.batch_size)
             self.single_variable_summary(eval_op, 'RMSE')
             #print 'eval_op name: ',  eval_op.name
         return eval_op
