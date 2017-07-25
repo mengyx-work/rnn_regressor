@@ -1,4 +1,4 @@
-import os, sys, yaml, argparse
+import os, sys, yaml, argparse, stat
 
 def generate_multi_model_tensorboard_script(log_path_dict):
     '''function to create a srcript to start the tensoboard

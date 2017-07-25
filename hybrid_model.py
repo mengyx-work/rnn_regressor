@@ -1,4 +1,4 @@
-import os, stat, multiprocessing
+import os, multiprocessing
 import pandas as pd
 from utils import clear_folder, model_meta_file, process_target_list
 from series_data_generator import SeriesDataGenerator
