@@ -1,5 +1,6 @@
 import subprocess, yaml
-from hybrid_model import HybridModel, create_local_log_path, generate_multi_model_tensorboard_script
+from hybrid_model import HybridModel, create_local_log_path
+from create_tensorboard_start_script import generate_multi_model_tensorboard_script
 
 
 def run_jobs_in_parallel(job_commands, model_name_list, log_process=True, model_set_name=None):

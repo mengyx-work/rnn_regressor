@@ -35,26 +35,6 @@ def create_local_log_path(common_path, model_name):
     return os.path.join(common_path, model_name, "log")
 
 
-def generate_multi_model_tensorboard_script(log_path_dict):
-    '''function to create a srcript to start the tensoboard
-    with logs from multiple models trained with different
-    sets of hyper-parameters.
-
-    Args:
-        log_path_dict (dict): key-value pairs of model_name : model_log_path
-
-    Returns:
-        None
-    '''
-    file_name = "start_multi_model_tensorboard.sh"
-    logdir = ",".join(["{}:{}".format(name, model_log_path) for name, model_log_path in log_path_dict.iteritems()])
-    with open(file_name, "w") as text_file:
-        text_file.write("#!/bin/bash \n")
-        text_file.write("tensorboard --logdir={}".format(logdir))
-    st = os.stat(file_name)
-    os.chmod(file_name, st.st_mode | stat.S_IEXEC)
-
-
 def generate_tensorboard_script(logdir):
     file_name = "start_tensorboard.sh"
     with open(file_name, "w") as text_file:
@@ -167,9 +147,9 @@ class HybridModel(object):
             loss = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(self.y, self.pred))) / self.batch_size)
             self.single_variable_summary(loss, 'RMSE_loss')
         with tf.name_scope('optimizer'):
-            #optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(loss)
+            optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(loss)
             #optimizer = tf.train.MomentumOptimizer(learning_rate, 0.5).minimize(loss)
-            optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(loss)
+            #optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(loss)
             print 'optimizer name: ',  optimizer.name
         return optimizer
 
