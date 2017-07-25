@@ -1,8 +1,11 @@
 import os, multiprocessing
 import pandas as pd
 from utils import clear_folder, model_meta_file, process_target_list
+from create_tensorboard_start_script import generate_tensorboard_script
 from series_data_generator import SeriesDataGenerator
 from google_cloud_storage_util import GCS_Bucket
+
+
 import tensorflow as tf
 from tensorflow.contrib import rnn
 from tensorflow.contrib import layers as tflayers
@@ -35,15 +38,6 @@ def create_local_log_path(common_path, model_name):
     return os.path.join(common_path, model_name, "log")
 
 
-def generate_tensorboard_script(logdir):
-    file_name = "start_tensorboard.sh"
-    with open(file_name, "w") as text_file:
-        text_file.write("#!/bin/bash \n")
-        text_file.write("tensorboard --logdir={}".format(logdir))
-    st = os.stat(file_name)
-    os.chmod(file_name, st.st_mode | stat.S_IEXEC)
-
-
 class HybridModel(object):
     """the hybrid_model as a class
 
@@ -70,8 +64,12 @@ class HybridModel(object):
         self.display_step = 100
         self.gcs_bucket = GCS_Bucket("newsroom-backend")
 
-        self.n_hidden = 8  # hidden layer dimension
-        self.FC_layers = [16, 1]
+
+        self.n_hidden = 4  # hidden layer dimension
+        self.FC_layers = [1]
+
+#        self.n_hidden = 8  # hidden layer dimension
+#        self.FC_layers = [16, 1]
 
         self.n_input = len(config_dict["time_interval_columns"])  # dimension of each time_step input
         self.n_meta_input = len(config_dict["static_columns"])  # dimension of meta input (categorical features)
@@ -129,11 +127,11 @@ class HybridModel(object):
             # Get LSTM cell output
             outputs, states = rnn.static_rnn(lstm_cell, x, dtype=tf.float32, scope='LSTM_unit')
             # combine the last LSTM unit output with `meta_X`
-            combined_output = tf.concat([outputs[-1], meta_X], 1)
+            #combined_output = tf.concat([outputs[-1], meta_X], 1)
 
             # combine all the LSTM unit output with `meta_X`, similar to an attention model
-            #alll_units_output = tf.concat([unit for unit in outputs], 1)
-            #combined_output = tf.concat([alll_units_output, meta_X], 1)
+            alll_units_output = tf.concat([unit for unit in outputs], 1)
+            combined_output = tf.concat([alll_units_output, meta_X], 1)
 
             print 'combined output dimension: ', combined_output.shape
             output = tflayers.stack(combined_output, tflayers.fully_connected, layers, scope='fully_connect_layer')
@@ -147,9 +145,9 @@ class HybridModel(object):
             loss = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(self.y, self.pred))) / self.batch_size)
             self.single_variable_summary(loss, 'RMSE_loss')
         with tf.name_scope('optimizer'):
-            optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(loss)
+            #optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(loss)
             #optimizer = tf.train.MomentumOptimizer(learning_rate, 0.5).minimize(loss)
-            #optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(loss)
+            optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(loss)
             print 'optimizer name: ',  optimizer.name
         return optimizer
 
@@ -177,9 +175,11 @@ class HybridModel(object):
             step = 1
             train_rmse, test_rmse = "unavailable", "unavailable"
             writer.add_graph(sess.graph)
+            '''
             with tf.name_scope('weight_matrix'):
                 weight_matrix = sess.graph.get_tensor_by_name("fully_connect_layer/fully_connect_layer_2/weights:0")
                 self.variable_summaries(weight_matrix, 'weight_matrix')
+            '''
             merged_summary_op = tf.summary.merge_all()
 
             with tf.name_scope('training'):    

@@ -1,5 +1,15 @@
 import os, sys, yaml, argparse, stat
 
+
+def generate_tensorboard_script(logdir):
+    file_name = "start_tensorboard.sh"
+    with open(file_name, "w") as text_file:
+        text_file.write("#!/bin/bash \n")
+        text_file.write("tensorboard --logdir={}".format(logdir))
+    st = os.stat(file_name)
+    os.chmod(file_name, st.st_mode | stat.S_IEXEC)
+
+
 def generate_multi_model_tensorboard_script(log_path_dict):
     '''function to create a srcript to start the tensoboard
     with logs from multiple models trained with different

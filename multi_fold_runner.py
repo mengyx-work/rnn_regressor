@@ -17,7 +17,7 @@ def main():
 
     '''
     parser = argparse.ArgumentParser()
-    parser.add_argument("-l", "--learning_rate", help="model training learning rate", type=float, default=0.1)
+    parser.add_argument("-l", "--learning_rate", help="model training learning rate", type=float, default=0.05)
     parser.add_argument("-b", "--batch_size", help="model training batch size", type=int, default=2048)
     parser.add_argument("-n", "--model_name", help="model name, also the folder name", type=str, default="NYDN_hybrid_model")
     parser.add_argument("--gcs_path", help="the GCS path for config_dict and data", type=str, default="test/ML")
