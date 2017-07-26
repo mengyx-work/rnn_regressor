@@ -6,8 +6,6 @@ train_data = collections.namedtuple('train_data', ['time_series_data',
                                                    'meta_data',
                                                    'target'])
 
-GCS_BUCKET_NAME = "newsroom-backend"
-
 
 def model_meta_file(model_path, file_prefix="final_model"):
     meta_files = [f for f in os.listdir(model_path) if f[-5:] == '.meta']

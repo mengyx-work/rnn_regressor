@@ -1,7 +1,7 @@
 import os, yaml, tempfile
 import pandas as pd
 from random import shuffle
-from utils import all_expected_data_columns, check_expected_config_keys, GCS_BUCKET_NAME
+from utils import all_expected_data_columns, check_expected_config_keys
 from google_cloud_storage_util import GCS_Bucket
 
 
@@ -31,7 +31,7 @@ def create_kfold_data_index_yaml_files(GCS_path, yaml_file_name, yaml_GCS_path, 
                              usecols=[config_dict["index_column"]])
     index = index_data.index.tolist()
     shuffle(index)
-    bucket = GCS_Bucket(GCS_BUCKET_NAME)
+    bucket = GCS_Bucket()
     yaml_file_list = []
     model_name_list = []
     tot_length = len(index)

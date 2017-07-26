@@ -59,9 +59,9 @@ class HybridModel(object):
         # Parameters
         self.learning_rate = learning_rate
         self.batch_size = batch_size
-        self.num_epochs = 100
+        self.num_epochs = 1000
         self.test_batch_size = 500
-        self.display_step = 100
+        self.display_step = 10
         self.gcs_bucket = GCS_Bucket("newsroom-backend")
 
 
@@ -142,19 +142,24 @@ class HybridModel(object):
         self.pred = self.RNN(self.x, self.meta_x, self.model_name, self.FC_layers)
         print 'the predicting tensor: ', self.pred
         with tf.name_scope('loss'):
-            loss = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(self.y, self.pred))) / self.batch_size)
-            self.single_variable_summary(loss, 'RMSE_loss')
+            #loss = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(self.y, self.pred))) / self.batch_size)
+            # reference to simplify the loss:
+            # https://stackoverflow.com/questions/33846069/how-to-set-rmse-cost-function-in-tensorflow
+            #loss = tf.reduce_sum(tf.squared_difference(self.y, self.pred))
+            loss = tf.reduce_sum(tf.abs(self.y - self.pred))
+
+            self.single_variable_summary(loss, 'objective_func_loss')
         with tf.name_scope('optimizer'):
-            #optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(loss)
+            optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(loss)
             #optimizer = tf.train.MomentumOptimizer(learning_rate, 0.5).minimize(loss)
-            optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(loss)
+            #optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(loss)
             print 'optimizer name: ',  optimizer.name
         return optimizer
 
     def create_eval_op(self):
         with tf.name_scope('eval_op'):
             eval_op = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(self.y, self.pred))) / self.batch_size)
-            self.single_variable_summary(eval_op, 'RMSE')
+            self.single_variable_summary(eval_op, 'eval_RMSE')
             #print 'eval_op name: ',  eval_op.name
         return eval_op
 

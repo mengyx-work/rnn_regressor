@@ -2,7 +2,6 @@ import os, argparse
 from series_data_generator import SeriesDataGenerator
 from google_cloud_storage_util import GCS_Bucket
 from hybrid_model import HybridModel
-from utils import GCS_BUCKET_NAME
 from data_preprocess import load_training_data_from_gcs, load_yaml_file_from_gcs, create_train_test_by_index
 
 
@@ -33,7 +32,7 @@ def main():
 
     args = parser.parse_args()
     config_dict, local_data_file = load_training_data_from_gcs(args.gcs_path, args.yaml_file_name)
-    bucket = GCS_Bucket(GCS_BUCKET_NAME)
+    bucket = GCS_Bucket()
     index_dict = load_yaml_file_from_gcs(bucket, args.index_gcs_path, args.index_file_name)
 
     train, valid_data = create_train_test_by_index(local_data_file, config_dict, index_dict)

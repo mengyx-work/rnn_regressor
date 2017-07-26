@@ -1,9 +1,10 @@
 from google.cloud import storage
 
+GCS_BUCKET_NAME = "newsroom-backend"
+
 
 class GCS_Bucket(object):
-
-    def __init__(self, bucket_name):
+    def __init__(self, bucket_name=GCS_BUCKET_NAME):
         client = storage.Client()
         self.bucket = client.get_bucket(bucket_name)
 

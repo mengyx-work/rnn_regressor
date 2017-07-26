@@ -17,13 +17,14 @@ def main():
 
     '''
     parser = argparse.ArgumentParser()
-    parser.add_argument("-l", "--learning_rate", help="model training learning rate", type=float, default=0.05)
-    parser.add_argument("-b", "--batch_size", help="model training batch size", type=int, default=2048)
+    parser.add_argument("-l", "--learning_rate", help="model training learning rate", type=float, default=0.001)
+    parser.add_argument("-b", "--batch_size", help="model training batch size", type=int, default=32)
     parser.add_argument("-n", "--model_name", help="model name, also the folder name", type=str, default="NYDN_hybrid_model")
     parser.add_argument("--gcs_path", help="the GCS path for config_dict and data", type=str, default="test/ML")
-    parser.add_argument("--yaml_file_name", help="model name, also the folder name", type=str, default="training_configuration.yaml")
+    #parser.add_argument("--yaml_file_name", help="model name, also the folder name", type=str, default="training_configuration.yaml")
+    parser.add_argument("--yaml_file_name", help="model name, also the folder name", type=str, default="processed_data_configuration.yaml")
     parser.add_argument("--index_gcs_path", help="the GCS path for config_dict and data", type=str, default="test/ML/index_yaml")
-    parser.add_argument("--fold_num", help="fold number for cross-validation", type=int, default=4)
+    parser.add_argument("--fold_num", help="fold number for cross-validation", type=int, default=1)
     args = parser.parse_args()
     yaml_file_list, model_name_list = create_kfold_data_index_yaml_files(args.gcs_path,
                                                                          args.yaml_file_name,
