@@ -8,7 +8,8 @@ job_command_list = []
 model_name_list = []
 GCS_path = 'test/ML'
 yaml_GCS_path = 'test/ML/index_yaml'
-yaml_file_name = 'training_configuration.yaml'
+#yaml_file_name = 'training_configuration.yaml'
+yaml_file_name = 'processed_data_configuration.yaml'
 
 for batch_size in batch_size_list:
     for learning_rate in learning_rate_list:
@@ -21,7 +22,7 @@ for batch_size in batch_size_list:
         args['--gcs_path'] = GCS_path
         args['--yaml_file_name'] = yaml_file_name
         args['--index_gcs_path'] = yaml_GCS_path
-        args['--fold_num'] = str(4)
+        args['--fold_num'] = str(1)
 
         command_lines = common_command_line[:]
         command_lines.extend(reduce(lambda x, y: x + y, args.items()))
