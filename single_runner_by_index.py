@@ -34,7 +34,6 @@ def main():
     config_dict, local_data_file = load_training_data_from_gcs(args.gcs_path, args.yaml_file_name)
     bucket = GCS_Bucket()
     index_dict = load_yaml_file_from_gcs(bucket, args.index_gcs_path, args.index_file_name)
-
     train, valid_data = create_train_test_by_index(local_data_file, config_dict, index_dict)
     data_generator = SeriesDataGenerator(train, config_dict)
     test_generator = SeriesDataGenerator(valid_data, config_dict)

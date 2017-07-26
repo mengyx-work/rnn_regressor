@@ -39,6 +39,7 @@ def main():
         args_dict['--batch_size'] = str(args.batch_size)
         args_dict['--gcs_path'] = args.gcs_path
         args_dict['--index_gcs_path'] = args.index_gcs_path
+        args_dict['--yaml_file_name'] = args.yaml_file_name
         args_dict['--model_name'] = model_name
         args_dict['--index_file_name'] = yaml_file
         command_lines = common_command_line[:]

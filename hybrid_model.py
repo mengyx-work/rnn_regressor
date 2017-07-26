@@ -150,9 +150,9 @@ class HybridModel(object):
 
             self.single_variable_summary(loss, 'objective_func_loss')
         with tf.name_scope('optimizer'):
-            optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(loss)
+            #optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(loss)
             #optimizer = tf.train.MomentumOptimizer(learning_rate, 0.5).minimize(loss)
-            #optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(loss)
+            optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(loss)
             print 'optimizer name: ',  optimizer.name
         return optimizer
 
