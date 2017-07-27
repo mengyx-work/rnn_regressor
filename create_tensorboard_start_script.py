@@ -33,12 +33,14 @@ def generate_multi_model_tensorboard_script(log_path_dict):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--all', help='use all the yaml files', action='store_true')
+    parser.add_argument('-l', '--list', nargs='+', help='list of yaml files', required=True)
+
     args = parser.parse_args()
     if args.all:
         mylist = os.listdir(os.getcwd())
         file_list = [file_name for file_name in mylist if ".yaml" in file_name]
     else:
-        file_list = sys.argv[1:]
+        file_list = args.list
     model_dict = {}
     for file_name in file_list:
         print "file name: {}".format(file_name)
