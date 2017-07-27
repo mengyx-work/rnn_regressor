@@ -59,7 +59,7 @@ class HybridModel(object):
         # Parameters
         self.learning_rate = learning_rate
         self.batch_size = batch_size
-        self.num_epochs = 1000
+        self.num_epochs = 100
         self.test_batch_size = 500
         self.display_step = 10
         self.gcs_bucket = GCS_Bucket("newsroom-backend")
@@ -193,8 +193,8 @@ class HybridModel(object):
                     sess.run(optimizer, feed_dict={self.x: data.time_series_data,
                                                    self.meta_x: data.meta_data,
                                                    self.y: data.target})
-
-                    if step % self.display_step == 0:
+                    iter_count = step / self.test_batch_size
+                    if iter_count > 0 and iter_count % self.display_step == 0:
                         # to validate using test data
                         if test_data_generator is not None:
                             # use all the test data every time
