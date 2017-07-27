@@ -33,7 +33,7 @@ def generate_multi_model_tensorboard_script(log_path_dict):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--all', help='use all the yaml files', action='store_true')
-    parser.add_argument('-l', '--list', nargs='+', help='list of yaml files', required=True)
+    parser.add_argument('-l', '--list', nargs='+', help='list of yaml files')
 
     args = parser.parse_args()
     if args.all:
