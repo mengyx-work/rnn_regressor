@@ -59,9 +59,9 @@ class HybridModel(object):
         # Parameters
         self.learning_rate = learning_rate
         self.batch_size = batch_size
-        self.num_epochs = 200
+        self.num_epochs = 3000
         self.test_batch_size = 500
-        self.display_step = 10
+        self.display_step = 20
         self.gcs_bucket = GCS_Bucket("newsroom-backend")
 
 

@@ -40,7 +40,7 @@ def main():
     try:
         #tf.reset_default_graph()
         print "learning rate: {}, batch size: {}".format(args.learning_rate, args.batch_size)
-        model = HybridModel(config_dict, args.model_name, learning_rate=args.learning_rate, batch_size=args.batch_size)
+        model = HybridModel(config_dict, args.model_name, learning_rate=args.learning_rate, batch_size=data_generator.get_total_counts())
         model.train(data_generator, test_generator)
     except Exception, e:
         print "found the exception {} in model training.".format(e)

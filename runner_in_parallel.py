@@ -2,18 +2,21 @@ from run_utils import run_jobs_in_parallel
 
 #common_command_line = ["python", "runner.py"]
 common_command_line = ["python", "multi_fold_runner.py"]
-learning_rate_list = [0.01, 0.001, 0.0001]
-batch_size_list = [100, 500, 1000]
+learning_rate_list = [0.005, 0.001, 0.005, 0.0001, 0.00005]
+batch_size_list = [0]
 job_command_list = []
 model_name_list = []
 GCS_path = 'test/ML'
 yaml_GCS_path = 'test/ML/index_yaml'
 #yaml_file_name = 'training_configuration.yaml'
-yaml_file_name = 'processed_data_configuration.yaml'
+#yaml_file_name = 'processed_data_configuration.yaml'
+yaml_file_name = 'target_median_norm_configuration.yaml'
+#yaml_file_name = 'target_mean_norm_configuration.yaml'
 
 for batch_size in batch_size_list:
     for learning_rate in learning_rate_list:
-        model_name = "learning_rate_{}_batch_size_{}".format(learning_rate, batch_size)
+        #model_name = "target_mean_all_learning_rate_{}_batch_size_{}".format(learning_rate, batch_size)
+        model_name = "median_norm_learning_rate_{}_all".format(learning_rate)
         args = {}
         args['--model_name'] = model_name
         args['--learning_rate'] = str(learning_rate)
