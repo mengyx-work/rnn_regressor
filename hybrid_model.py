@@ -65,11 +65,11 @@ class HybridModel(object):
         self.gcs_bucket = GCS_Bucket("newsroom-backend")
 
 
-        self.n_hidden = 4  # hidden layer dimension
-        self.FC_layers = [1]
+#        self.n_hidden = 4  # hidden layer dimension
+#        self.FC_layers = [1]
 
-#        self.n_hidden = 8  # hidden layer dimension
-#        self.FC_layers = [16, 1]
+        self.n_hidden = 8  # hidden layer dimension
+        self.FC_layers = [16, 1]
 
         self.n_input = len(config_dict["time_interval_columns"])  # dimension of each time_step input
         self.n_meta_input = len(config_dict["static_columns"])  # dimension of meta input (categorical features)
@@ -145,8 +145,8 @@ class HybridModel(object):
             #loss = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(self.y, self.pred))) / self.batch_size)
             # reference to simplify the loss:
             # https://stackoverflow.com/questions/33846069/how-to-set-rmse-cost-function-in-tensorflow
-            #loss = tf.reduce_sum(tf.squared_difference(self.y, self.pred))
-            loss = tf.reduce_sum(tf.abs(self.y - self.pred))
+            #loss = tf.reduce_sum(tf.squared_difference(self.y, self.pred))  # the RMSE loss
+            loss = tf.reduce_sum(tf.abs(tf.subtract(self.y, self.pred)))  # the MAE los
 
             self.single_variable_summary(loss, 'objective_func_loss')
         with tf.name_scope('optimizer'):
@@ -158,7 +158,8 @@ class HybridModel(object):
 
     def create_eval_op(self):
         with tf.name_scope('eval_op'):
-            eval_op = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(self.y, self.pred))) / self.batch_size)
+            #eval_op = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(self.y, self.pred))) / self.batch_size)  # the RMSE eval error
+            eval_op = tf.reduce_sum(tf.abs(tf.subtract(self.y, self.pred)) / self.batch_size)  # the MAE loss
             self.single_variable_summary(eval_op, 'eval_RMSE')
             #print 'eval_op name: ',  eval_op.name
         return eval_op
@@ -180,11 +181,11 @@ class HybridModel(object):
             step = 1
             train_rmse, test_rmse = "unavailable", "unavailable"
             writer.add_graph(sess.graph)
-            '''
+            #'''
             with tf.name_scope('weight_matrix'):
                 weight_matrix = sess.graph.get_tensor_by_name("fully_connect_layer/fully_connect_layer_2/weights:0")
                 self.variable_summaries(weight_matrix, 'weight_matrix')
-            '''
+            #'''
             merged_summary_op = tf.summary.merge_all()
 
             with tf.name_scope('training'):    
