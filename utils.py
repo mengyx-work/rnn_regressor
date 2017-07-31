@@ -18,7 +18,7 @@ def model_meta_file(model_path, file_prefix="final_model"):
 
 
 def process_target_list(nested_list):
-    return [int(elem[0]) for elem in nested_list]
+    return [elem[0] for elem in nested_list]
 
 
 def check_expected_config_keys(local_config_dict, expected_keys):
