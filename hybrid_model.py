@@ -69,7 +69,8 @@ class HybridModel(object):
 #        self.FC_layers = [1]
 
         self.n_hidden = 8  # hidden layer dimension
-        self.FC_layers = [16, 1]
+#        self.FC_layers = [16, 1]
+        self.FC_layers = [8, 1]
 
         self.n_input = len(config_dict["time_interval_columns"])  # dimension of each time_step input
         self.n_meta_input = len(config_dict["static_columns"])  # dimension of meta input (categorical features)
