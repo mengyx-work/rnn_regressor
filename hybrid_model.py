@@ -59,18 +59,18 @@ class HybridModel(object):
         # Parameters
         self.learning_rate = learning_rate
         self.batch_size = batch_size
-        self.num_epochs = 3000
+        self.num_epochs = 100
         self.test_batch_size = 500
-        self.display_step = 20
+        self.display_step = 1
         self.gcs_bucket = GCS_Bucket("newsroom-backend")
 
 
-#        self.n_hidden = 4  # hidden layer dimension
-#        self.FC_layers = [1]
+        self.n_hidden = 4  # hidden layer dimension
+        self.FC_layers = [1]
 
-        self.n_hidden = 8  # hidden layer dimension
+#        self.n_hidden = 8  # hidden layer dimension
 #        self.FC_layers = [16, 1]
-        self.FC_layers = [8, 1]
+#        self.FC_layers = [8, 1]
 
         self.n_input = len(config_dict["time_interval_columns"])  # dimension of each time_step input
         self.n_meta_input = len(config_dict["static_columns"])  # dimension of meta input (categorical features)
@@ -157,19 +157,25 @@ class HybridModel(object):
             print 'optimizer name: ',  optimizer.name
         return optimizer
 
-    def create_eval_op(self):
-        with tf.name_scope('eval_op'):
+    def create_eval_op(self, data_size, eval_name='eval'):
+        with tf.name_scope(eval_name):
             #eval_op = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(self.y, self.pred))) / self.batch_size)  # the RMSE eval error
-            eval_op = tf.reduce_sum(tf.abs(tf.subtract(self.y, self.pred)) / self.batch_size)  # the MAE loss
-            self.single_variable_summary(eval_op, 'eval_RMSE')
+            eval_op = tf.reduce_sum(tf.abs(tf.subtract(self.y, self.pred)) / data_size)  # the MAE loss
+            self.single_variable_summary(eval_op, eval_name)
             #print 'eval_op name: ',  eval_op.name
         return eval_op
 
     def train(self, data_generator, test_data_generator=None):
         clear_folder(self.log_path)
         clear_folder(self.model_path)
+
         optimizer = self.build()  # the optimizer for model building
-        eval_op = self.create_eval_op()  # this eval operation gives a specific list of results
+        if test_data_generator is not None:
+            test_data_size = test_data_generator.get_total_counts()
+        else:
+            test_data_size = self.batch_size
+        test_eval_op = self.create_eval_op(test_data_size, 'test_eval')  # eval operation using test data
+        train_eval_op = self.create_eval_op(self.batch_size, 'train_eval')  # eval operation using train data
         init = tf.global_variables_initializer()
         saver = tf.train.Saver(max_to_keep=5, keep_checkpoint_every_n_hours=1)
 
@@ -180,16 +186,15 @@ class HybridModel(object):
             # Launch the graph
             sess.run(init)
             step = 1
-            train_rmse, test_rmse = "unavailable", "unavailable"
+            train_MAE, test_MAE = "unavailable", "unavailable"
             writer.add_graph(sess.graph)
-            #'''
+            '''
             with tf.name_scope('weight_matrix'):
                 weight_matrix = sess.graph.get_tensor_by_name("fully_connect_layer/fully_connect_layer_2/weights:0")
                 self.variable_summaries(weight_matrix, 'weight_matrix')
-            #'''
+            '''
             merged_summary_op = tf.summary.merge_all()
-
-            with tf.name_scope('training'):    
+            with tf.name_scope('training'):
                 while step * self.batch_size < self.num_epochs * data_generator.get_total_counts():
                     data = data_generator.next_batch(self.batch_size)
                     sess.run(optimizer, feed_dict={self.x: data.time_series_data,
@@ -200,21 +205,27 @@ class HybridModel(object):
                         # to validate using test data
                         if test_data_generator is not None:
                             # use all the test data every time
-                            test_data = test_data_generator.next_batch(test_data_generator.get_total_counts())
-                            summary, test_rmse = sess.run([merged_summary_op, eval_op],
-                                                          feed_dict={self.x: test_data.time_series_data,
-                                                                     self.meta_x: test_data.meta_data,
-                                                                     self.y: test_data.target})
+                            test_data = test_data_generator.next_batch(test_data_size)
+                            summary, test_MAE = sess.run([merged_summary_op, test_eval_op],
+                                                         feed_dict={self.x: test_data.time_series_data,
+                                                                    self.meta_x: test_data.meta_data,
+                                                                    self.y: test_data.target})
+
+                            train_MAE = sess.run(train_eval_op,
+                                                feed_dict={self.x: data.time_series_data,
+                                                            self.meta_x: data.meta_data,
+                                                            self.y: data.target})
+
                         else:
-                            summary, train_rmse = sess.run([merged_summary_op, eval_op],
-                                                           feed_dict={self.x: data.time_series_data,
-                                                                      self.meta_x: data.meta_data,
-                                                                      self.y: data.target})
+                            summary, train_MAE = sess.run([merged_summary_op, train_eval_op],
+                                                          feed_dict={self.x: data.time_series_data,
+                                                                     self.meta_x: data.meta_data,
+                                                                     self.y: data.target})
                         writer.add_summary(summary, step)
                         saver.save(sess, os.path.join(self.model_path, 'models'), global_step=step)
-                        print "Iter {}, train RMSE: {}, test RMSE: {}".format(step * self.batch_size,
-                                                                              str(train_rmse),
-                                                                              str(test_rmse))
+                        print "Iter {}, train MAE: {}, test MAE: {}".format(step * self.batch_size,
+                                                                            str(train_MAE),
+                                                                            str(test_MAE))
 
                     step += 1
                 saver.save(sess, os.path.join(self.model_path, 'final_model'), global_step=step)
