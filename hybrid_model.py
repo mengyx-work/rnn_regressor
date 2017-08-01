@@ -128,11 +128,11 @@ class HybridModel(object):
             # Get LSTM cell output
             outputs, states = rnn.static_rnn(lstm_cell, x, dtype=tf.float32, scope='LSTM_unit')
             # combine the last LSTM unit output with `meta_X`
-            combined_output = tf.concat([outputs[-1], meta_X], 1)
+            #combined_output = tf.concat([outputs[-1], meta_X], 1)
 
             # combine all the LSTM unit output with `meta_X`, similar to an attention model
-            #alll_units_output = tf.concat([unit for unit in outputs], 1)
-            #combined_output = tf.concat([alll_units_output, meta_X], 1)
+            alll_units_output = tf.concat([unit for unit in outputs], 1)
+            combined_output = tf.concat([alll_units_output, meta_X], 1)
 
             print 'combined output dimension: ', combined_output.shape
             output = tflayers.stack(combined_output, tflayers.fully_connected, layers, scope='fully_connect_layer')

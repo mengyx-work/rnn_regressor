@@ -16,7 +16,8 @@ for batch_size in batch_size_list:
     for learning_rate in learning_rate_list:
         #model_name = "target_mean_all_learning_rate_{}_batch_size_{}".format(learning_rate, batch_size)
         #model_name = "column_norm_last_hid8_16-1_learning_rate_{}_MAE".format(learning_rate)
-        model_name = "target_median_last_hid8_4-1_learning_rate_{}_MAE".format(learning_rate)
+        #model_name = "target_median_last_hid8_4-1_learning_rate_{}_MAE".format(learning_rate)
+        model_name = "target_median_hid4_4-1_learning_rate_{}_MAE".format(learning_rate)
         args = {}
         args['--model_name'] = model_name
         args['--learning_rate'] = str(learning_rate)
