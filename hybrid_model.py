@@ -193,6 +193,7 @@ class HybridModel(object):
         print 'logs to be written into: ', self.log_path
         writer = tf.summary.FileWriter(self.log_path)
         with tf.Session(config=self.config) as sess:
+            print self.config.gpu_options
             # Launch the graph
             sess.run(init)
             step = 1
