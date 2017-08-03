@@ -51,8 +51,8 @@ class HybridModel(object):
         n_input (int) : the dimension of input vector, in this model
 
     """
-    #NUM_THREADS = 2 * multiprocessing.cpu_count()
-    NUM_THREADS = multiprocessing.cpu_count()
+    NUM_THREADS = 2 * multiprocessing.cpu_count()
+    USE_CPU = True
     COMMON_PATH = os.path.join(os.path.expanduser("~"), 'local_tensorflow_content')
 
     def __init__(self, config_dict, model_name='hybrid_model', learning_rate=0.001, batch_size=20):
@@ -81,7 +81,13 @@ class HybridModel(object):
         self.log_path = create_local_log_path(self.COMMON_PATH, self.model_name)
         #self.log_path = os.path.join(self.model_path, 'log')
         generate_tensorboard_script(self.log_path)  # create the script to start a tensorboard session
-        self.config = tf.ConfigProto(intra_op_parallelism_threads=self.NUM_THREADS)
+        if self.USE_CPU:
+            self.config = tf.ConfigProto(intra_op_parallelism_threads=self.NUM_THREADS)
+        else:
+            self.config = tf.ConfigProto(log_device_placement=True,
+                                         gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=0.08)
+)
+
         # model placeholders
         self.x = tf.placeholder("float", [None, self.n_steps, self.n_input], name='input_X')
         self.meta_x = tf.placeholder("float", [None, self.n_meta_input], name='input_meta_X')
