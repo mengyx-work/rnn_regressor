@@ -68,11 +68,11 @@ class HybridModel(object):
         self.gcs_bucket = GCS_Bucket()
 
 
-        self.n_hidden = 4  # hidden layer dimension
-        self.FC_layers = [1]
+        #self.n_hidden = 4  # hidden layer dimension
+        #self.FC_layers = [1]
 
-#        self.n_hidden = 8  # hidden layer dimension
-#        self.FC_layers = [16, 1]
+        self.n_hidden = 32  # hidden layer dimension
+        self.FC_layers = [16, 1]
 #        self.FC_layers = [8, 1]
 
         self.n_input = len(config_dict["time_interval_columns"])  # dimension of each time_step input
@@ -90,8 +90,7 @@ class HybridModel(object):
             self.config = tf.ConfigProto(log_device_placement=False)
             self.config.gpu_options.per_process_gpu_memory_fraction = 0.08
             #self.config = tf.ConfigProto(log_device_placement=True,
-            #                             gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=0.08)
-)
+            #                             gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=0.08))
 
         # model placeholders
         self.x = tf.placeholder("float", [None, self.n_steps, self.n_input], name='input_X')
@@ -139,11 +138,11 @@ class HybridModel(object):
             # Get LSTM cell output
             outputs, states = rnn.static_rnn(lstm_cell, x, dtype=tf.float32, scope='LSTM_unit')
             # combine the last LSTM unit output with `meta_X`
-            #combined_output = tf.concat([outputs[-1], meta_X], 1)
+            combined_output = tf.concat([outputs[-1], meta_X], 1)
 
             # combine all the LSTM unit output with `meta_X`, similar to an attention model
-            alll_units_output = tf.concat([unit for unit in outputs], 1)
-            combined_output = tf.concat([alll_units_output, meta_X], 1)
+            #alll_units_output = tf.concat([unit for unit in outputs], 1)
+            #combined_output = tf.concat([alll_units_output, meta_X], 1)
 
             print 'combined output dimension: ', combined_output.shape
             output = tflayers.stack(combined_output, tflayers.fully_connected, layers, scope='fully_connect_layer')
