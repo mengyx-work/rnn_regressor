@@ -87,8 +87,10 @@ class HybridModel(object):
         if self.USE_CPU:
             self.config = tf.ConfigProto(intra_op_parallelism_threads=self.NUM_THREADS)
         else:
-            self.config = tf.ConfigProto(log_device_placement=True,
-                                         gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=0.08)
+            self.config = tf.ConfigProto(log_device_placement=False)
+            self.config.gpu_options.per_process_gpu_memory_fraction = 0.08
+            #self.config = tf.ConfigProto(log_device_placement=True,
+            #                             gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=0.08)
 )
 
         # model placeholders
