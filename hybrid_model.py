@@ -9,6 +9,7 @@ from google_cloud_storage_util import GCS_Bucket
 import tensorflow as tf
 from tensorflow.contrib import rnn
 from tensorflow.contrib import layers as tflayers
+from tensorflow.python.client import device_lib
 
 
 def model_predict(data, config_dict, local_model_path, pred_op_name):
@@ -52,8 +53,10 @@ class HybridModel(object):
 
     """
     NUM_THREADS = 2 * multiprocessing.cpu_count()
-    USE_CPU = True
     COMMON_PATH = os.path.join(os.path.expanduser("~"), 'local_tensorflow_content')
+    USE_CPU = True
+    if len([x.name for x in device_lib.list_local_devices() if x.device_type == 'GPU']) > 0:
+        USE_CPU = False
 
     def __init__(self, config_dict, model_name='hybrid_model', learning_rate=0.001, batch_size=20):
         # Parameters
