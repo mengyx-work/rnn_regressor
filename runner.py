@@ -15,6 +15,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--learning_rate", help="model training learning rate", type=float, default=0.00001)
     parser.add_argument("-b", "--batch_size", help="model training batch size", type=int, default=50)
+    parser.add_argument("-c", "--use_cpu", help="whether use CPU", type=bool, default=True)
     parser.add_argument("-n", "--model_name", help="model name, also the folder name", type=str, default="NYDN_hybrid_model")
     args = parser.parse_args()
 
@@ -22,7 +23,11 @@ def main():
     test_generator = SeriesDataGenerator(valid_data, config_dict)
     try:
         print "learning rate: {}, batch size: {}".format(args.learning_rate, args.batch_size)
-        model = HybridModel(config_dict, args.model_name, learning_rate=args.learning_rate, batch_size=args.batch_size)
+        model = HybridModel(config_dict,
+                            args.model_name,
+                            USE_CPU=args.use_cpu,
+                            learning_rate=args.learning_rate,
+                            batch_size=args.batch_size)
         model.train(data_generator, test_generator)
     except Exception, e:
         print "found the exception {} in model training.".format(e)

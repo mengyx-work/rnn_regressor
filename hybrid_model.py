@@ -9,7 +9,6 @@ from google_cloud_storage_util import GCS_Bucket
 import tensorflow as tf
 from tensorflow.contrib import rnn
 from tensorflow.contrib import layers as tflayers
-from tensorflow.python.client import device_lib
 
 
 def model_predict(data, config_dict, local_model_path, pred_op_name):
@@ -52,14 +51,12 @@ class HybridModel(object):
         n_input (int) : the dimension of input vector, in this model
 
     """
-    NUM_THREADS = 2 * multiprocessing.cpu_count()
+    NUM_THREADS = multiprocessing.cpu_count()
     COMMON_PATH = os.path.join(os.path.expanduser("~"), 'local_tensorflow_content')
-    USE_CPU = False
-    #if len([x.name for x in device_lib.list_local_devices() if x.device_type == 'GPU']) > 0:
-    #    USE_CPU = False
 
-    def __init__(self, config_dict, model_name='hybrid_model', learning_rate=0.001, batch_size=20):
+    def __init__(self, config_dict, model_name='hybrid_model', learning_rate=0.001, batch_size=20, USE_CPU=True):
         # Parameters
+        self.USE_CPU = USE_CPU
         self.learning_rate = learning_rate
         self.batch_size = batch_size
         self.num_epochs = 1500
@@ -89,10 +86,6 @@ class HybridModel(object):
         else:
             self.config = tf.ConfigProto(log_device_placement=False)
             self.config.gpu_options.per_process_gpu_memory_fraction = 0.05
-	    #self.config.gpu_options.allow_growth=False
-            #self.config = tf.ConfigProto(log_device_placement=True,
-            #                             gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=0.08))
-
         # model placeholders
         self.x = tf.placeholder("float", [None, self.n_steps, self.n_input], name='input_X')
         self.meta_x = tf.placeholder("float", [None, self.n_meta_input], name='input_meta_X')
