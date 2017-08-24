@@ -83,6 +83,7 @@ class HybridModel(object):
         generate_tensorboard_script(self.log_path)  # create the script to start a tensorboard session
         if self.USE_CPU:
             self.config = tf.ConfigProto(intra_op_parallelism_threads=self.NUM_THREADS)
+            os.environ['CUDA_VISIBLE_DEVICES'] = '-1'  # the only way to completely not use GPU
         else:
             self.config = tf.ConfigProto(log_device_placement=False)
             self.config.gpu_options.per_process_gpu_memory_fraction = 0.05
