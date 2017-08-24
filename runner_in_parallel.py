@@ -15,9 +15,9 @@ yaml_file_name = 'target_median_norm_configuration.yaml'
 for batch_size in batch_size_list:
     for learning_rate in learning_rate_list:
         #model_name = "target_mean_all_learning_rate_{}_batch_size_{}".format(learning_rate, batch_size)
-        #model_name = "column_norm_last_hid8_16-1_learning_rate_{}_MAE".format(learning_rate)
+        model_name = "column_norm_last_hid32_16-1_learning_rate_{}_MAE".format(learning_rate)
         #model_name = "target_median_last_hid8_4-1_learning_rate_{}_MAE".format(learning_rate)
-        model_name = "target_median_hid4_4-1_learning_rate_{}_MAE".format(learning_rate)
+        #model_name = "target_median_hid4_4-1_learning_rate_{}_MAE".format(learning_rate)
         args = {}
         args['--model_name'] = model_name
         args['--learning_rate'] = str(learning_rate)
@@ -26,7 +26,7 @@ for batch_size in batch_size_list:
         args['--gcs_path'] = GCS_path
         args['--yaml_file_name'] = yaml_file_name
         args['--index_gcs_path'] = yaml_GCS_path
-        args['--fold_num'] = str(1)
+        args['--fold_num'] = str(3)
 
         command_lines = common_command_line[:]
         command_lines.extend(reduce(lambda x, y: x + y, args.items()))

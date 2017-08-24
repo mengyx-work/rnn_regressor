@@ -54,9 +54,9 @@ class HybridModel(object):
     """
     NUM_THREADS = 2 * multiprocessing.cpu_count()
     COMMON_PATH = os.path.join(os.path.expanduser("~"), 'local_tensorflow_content')
-    USE_CPU = True
-    if len([x.name for x in device_lib.list_local_devices() if x.device_type == 'GPU']) > 0:
-        USE_CPU = False
+    USE_CPU = False
+    #if len([x.name for x in device_lib.list_local_devices() if x.device_type == 'GPU']) > 0:
+    #    USE_CPU = False
 
     def __init__(self, config_dict, model_name='hybrid_model', learning_rate=0.001, batch_size=20):
         # Parameters
@@ -88,7 +88,8 @@ class HybridModel(object):
             self.config = tf.ConfigProto(intra_op_parallelism_threads=self.NUM_THREADS)
         else:
             self.config = tf.ConfigProto(log_device_placement=False)
-            self.config.gpu_options.per_process_gpu_memory_fraction = 0.08
+            self.config.gpu_options.per_process_gpu_memory_fraction = 0.05
+	    #self.config.gpu_options.allow_growth=False
             #self.config = tf.ConfigProto(log_device_placement=True,
             #                             gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=0.08))
 

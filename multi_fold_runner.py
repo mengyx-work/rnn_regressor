@@ -24,7 +24,7 @@ def main():
     #parser.add_argument("--yaml_file_name", help="model name, also the folder name", type=str, default="training_configuration.yaml")
     parser.add_argument("--yaml_file_name", help="model name, also the folder name", type=str, default="processed_data_configuration.yaml")
     parser.add_argument("--index_gcs_path", help="the GCS path for config_dict and data", type=str, default="test/ML/index_yaml")
-    parser.add_argument("--fold_num", help="fold number for cross-validation", type=int, default=1)
+    parser.add_argument("--fold_num", help="fold number for cross-validation", type=int, default=2)
     args = parser.parse_args()
     yaml_file_list, model_name_list = create_kfold_data_index_yaml_files(args.gcs_path,
                                                                          args.yaml_file_name,
