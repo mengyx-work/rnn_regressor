@@ -20,17 +20,16 @@ def main():
         6. --index_gcs_path: GCS path for the data index yaml file
         7. --index_file_name: index yaml file name in GCS
     '''
-
     parser = argparse.ArgumentParser()
     parser.add_argument("-l", "--learning_rate", help="model training learning rate", type=float, default=0.00005)
     parser.add_argument("-b", "--batch_size", help="model training batch size", type=int, default=0)
     parser.add_argument("-n", "--model_name", help="model name, also the folder name", type=str, default="NYDN_hybrid_model")
     parser.add_argument("--use_cpu", help="whether use CPU", type=bool, default=True)
-    parser.add_argument("--gcs_path", help="the GCS path for config_dict and data", type=str, default="test/ML")
+    parser.add_argument("--gcs_path", help="the GCS path for config_dict and data", type=str, default="test/MachineLearning")
     parser.add_argument("--yaml_file_name", help="model name, also the folder name", type=str, default="target_median_norm_configuration.yaml")
-    parser.add_argument("--index_gcs_path", help="the GCS path for config_dict and data", type=str, default="test/ML/index_yaml")
-    #parser.add_argument("--index_file_name", help="model name, also the folder name", type=str, default="target_median_last_hid8_16-1_learning_rate_0.001_MAE_fold_1.yaml")
-    parser.add_argument("--index_file_name", help="model name, also the folder name", type=str)
+    parser.add_argument("--index_gcs_path", help="the GCS path for config_dict and data", type=str, default="test/MachineLearning/index_yaml")
+    parser.add_argument("--index_file_name", help="model name, also the folder name", type=str, default="NYDN_hybrid_model_fold_2.yaml")
+    #parser.add_argument("--index_file_name", help="model name, also the folder name", type=str)
     args = parser.parse_args()
     config_dict, local_data_file = load_training_data_from_gcs(args.gcs_path, args.yaml_file_name)
     bucket = GCS_Bucket()

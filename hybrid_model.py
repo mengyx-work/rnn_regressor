@@ -56,12 +56,12 @@ class HybridModel(object):
 
     def __init__(self, config_dict, model_name='hybrid_model', learning_rate=0.001, batch_size=20, USE_CPU=True):
         # Parameters
-        self.USE_CPU = USE_CPU
+        self.USE_CPU = True
         self.learning_rate = learning_rate
         self.batch_size = batch_size
         self.num_epochs = 1500
         #self.test_batch_size = 500
-        self.display_step = 20
+        self.display_step = 2
         self.gcs_bucket = GCS_Bucket()
 
 

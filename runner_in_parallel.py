@@ -20,11 +20,12 @@ for batch_size in batch_size_list:
         #model_name = "target_median_last_hid8_4-1_learning_rate_{}_MAE".format(learning_rate)
         #model_name = "target_median_hid4_4-1_learning_rate_{}_MAE".format(learning_rate)
         model_name = "target_median_last_hid32_16-1_learning_rate_{}_MAE".format(learning_rate)
+        model_name = "test_special_{}_MAE".format(learning_rate)
         args = {}
         args['--model_name'] = model_name
         args['--learning_rate'] = str(learning_rate)
         args['--batch_size'] = str(batch_size)
-        args['--use_cpu'] = "Truepyth"
+        args['--use_cpu'] = "True"
 
         args['--gcs_path'] = GCS_path
         args['--yaml_file_name'] = yaml_file_name
