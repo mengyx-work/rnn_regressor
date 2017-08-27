@@ -1,4 +1,4 @@
-import os, multiprocessing
+import os, multiprocessing, time
 import pandas as pd
 from utils import clear_folder, model_meta_file, process_target_list
 from create_tensorboard_start_script import generate_tensorboard_script
@@ -198,7 +198,7 @@ class HybridModel(object):
         train_eval_op = self.create_eval_op(self.batch_size, 'train_eval')  # eval operation using train data
         init = tf.global_variables_initializer()
         saver = tf.train.Saver(max_to_keep=5, keep_checkpoint_every_n_hours=1)
-
+        start_time = time.time()
         print 'models to be written into: ', self.model_path
         print 'logs to be written into: ', self.log_path
         writer = tf.summary.FileWriter(self.log_path)
@@ -218,25 +218,24 @@ class HybridModel(object):
             with tf.name_scope('training'):
                 while step * self.batch_size < self.num_epochs * data_generator.get_total_counts():
                     train_feed = self._generate_feed(data_generator, dropout_input_keep_prob)
-                    print 'start feeding the data...'
                     _, step = sess.run([optimizer, self.increment_global_step_op], feed_dict=train_feed)
-
                     if step % self.display_step == 0:
                         # to validate using test data
                         if test_data_generator is not None:
                             # use all the test data every time
                             summary, test_MAE = sess.run([merged_summary_op, test_eval_op],
                                                          feed_dict=self._generate_feed(test_data_generator, 1.))
-
                             train_MAE = sess.run(train_eval_op, feed_dict=train_feed)
                         else:
                             summary, train_MAE = sess.run([merged_summary_op, train_eval_op], feed_dict=train_feed)
-
                         writer.add_summary(summary, step)
                         saver.save(sess, os.path.join(self.model_path, 'models'), global_step=step)
-                        print "step {}, train MAE: {}, test MAE: {}".format(step,
-                                                                            str(train_MAE),
-                                                                            str(test_MAE))
+                        cur_time = time.time()
+                        print "step {}, train MAE: {}, test MAE: {}, using {:.2f} seconds".format(step,
+                                                                                                  str(train_MAE),
+                                                                                                  str(test_MAE),
+                                                                                                  (cur_time - start_time))
+                        start_time = cur_time
 
                     step += 1
                 saver.save(sess, os.path.join(self.model_path, 'final_model'), global_step=step)
