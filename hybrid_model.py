@@ -87,10 +87,15 @@ class HybridModel(object):
         else:
             self.config = tf.ConfigProto(log_device_placement=False)
             self.config.gpu_options.per_process_gpu_memory_fraction = 0.05
-        # model placeholders
+
+    def _init_placeholders(self):
+        # initialize model placeholders
         self.x = tf.placeholder("float", [None, self.n_steps, self.n_input], name='input_X')
         self.meta_x = tf.placeholder("float", [None, self.n_meta_input], name='input_meta_X')
         self.y = tf.placeholder("float", [None, 1], name='input_y')
+        self.dropout_input_keep_prob = tf.placeholder(dtype=tf.float32, name='dropout_input_keep_prob')
+        self.global_step = tf.Variable(0, name='global_step', trainable=False, dtype=tf.int32)
+        self.increment_global_step_op = tf.assign(self.global_step, self.global_step + 1)
 
     def get_model_path(self):
         return self.model_path
@@ -109,56 +114,54 @@ class HybridModel(object):
         tf.summary.scalar('{}_min'.format(name), tf.reduce_min(var))
         tf.summary.histogram('{}_histogram'.format(name), var)
 
-    def RNN(self, X, meta_X, model_name='TF_model', layers=[16, 1]):
+    def RNN(self):
         """ build the RNN model graph
 
         Given placeholders `X` and `meta_X`, as well as a list `layer` to
         represent structure of fully-connected part, to build a RNN model
         graph.
 
-        Args:
-            X (batch_size, n_steps, n_input): the model RNN part input
-            meta_X (batch_size, n_meta_input): the model fully-connected part input
-            model_name (string) : model name
-            layers (List(int)): a list of integers to represent the Fully-connected part structure
+        expected Args:
+            self.x (batch_size, n_steps, n_input): the model RNN part input
+            mself.meta_x (batch_size, n_meta_input): the model fully-connected part input
+            self.model_name (string) : model name
+            self.FC_layers (List(int)): a list of integers to represent the Fully-connected part structure
 
          Returns:
             A `Tensor` with the dimension of layers[-1]
         """
-        with tf.name_scope(model_name):
+        with tf.name_scope(self.model_name):
             # Unstack `X` by the axis of ``n_step`` to get a list of 'n_steps' tensors of shape (batch_size, n_input)
-            x = tf.unstack(X, self.n_steps, 1)
+            x = tf.unstack(self.x, self.n_steps, 1)
             # Define a LSTM cell
-            lstm_cell = rnn.BasicLSTMCell(self.n_hidden, reuse=False)
+            #lstm_cell = rnn.BasicLSTMCell(self.n_hidden, reuse=False)
+            lstm_cell = tf.contrib.rnn.LSTMCell(self.n_hidden)
+            lstm_cell = tf.contrib.rnn.DropoutWrapper(lstm_cell, input_keep_prob=self.dropout_input_keep_prob)
             # Get LSTM cell output
             outputs, states = rnn.static_rnn(lstm_cell, x, dtype=tf.float32, scope='LSTM_unit')
+
             # combine the last LSTM unit output with `meta_X`
-            combined_output = tf.concat([outputs[-1], meta_X], 1)
+            combined_output = tf.concat([outputs[-1], self.meta_x], 1)
 
             # combine all the LSTM unit output with `meta_X`, similar to an attention model
             #alll_units_output = tf.concat([unit for unit in outputs], 1)
             #combined_output = tf.concat([alll_units_output, meta_X], 1)
 
             print 'combined output dimension: ', combined_output.shape
-            output = tflayers.stack(combined_output, tflayers.fully_connected, layers, scope='fully_connect_layer')
+            output = tflayers.stack(combined_output, tflayers.fully_connected, self.FC_layers, scope='fully_connect_layer')
             return output
 
-    def build(self):
-        # build the model
-        self.pred = self.RNN(self.x, self.meta_x, self.model_name, self.FC_layers)
-        print 'the predicting tensor: ', self.pred
+    def _init_optimizer(self, learning_rate):
         with tf.name_scope('loss'):
-            #loss = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(self.y, self.pred))) / self.batch_size)
             # reference to simplify the loss:
             # https://stackoverflow.com/questions/33846069/how-to-set-rmse-cost-function-in-tensorflow
             #loss = tf.reduce_sum(tf.squared_difference(self.y, self.pred))  # the RMSE loss
             loss = tf.reduce_sum(tf.abs(tf.subtract(self.y, self.pred)))  # the MAE loss
-
             self.single_variable_summary(loss, 'objective_func_loss')
         with tf.name_scope('optimizer'):
             #optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(loss)
             #optimizer = tf.train.MomentumOptimizer(learning_rate, 0.5).minimize(loss)
-            optimizer = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(loss)
+            optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(loss)
             print 'optimizer name: ',  optimizer.name
         return optimizer
 
@@ -170,11 +173,23 @@ class HybridModel(object):
             #print 'eval_op name: ',  eval_op.name
         return eval_op
 
-    def train(self, data_generator, test_data_generator=None):
+    def _generate_feed(self, data_generator, dropout_input_keep_prob=1.):
+        data = data_generator.next_batch(self.batch_size)
+        return {self.x: data.time_series_data,
+                self.meta_x: data.meta_data,
+                self.y: data.target,
+                self.dropout_input_keep_prob : dropout_input_keep_prob}
+
+    def train(self, data_generator, test_data_generator=None, dropout_input_keep_prob=0.8):
         clear_folder(self.log_path)
         clear_folder(self.model_path)
+        self._init_placeholders()
+        # build the model
+        # self.pred = self.RNN(self.x, self.meta_x, self.model_name, self.FC_layers)
+        self.pred = self.RNN()
+        print 'the predicting tensor: ', self.pred
+        optimizer = self._init_optimizer(self.learning_rate)  # the optimizer for model building
 
-        optimizer = self.build()  # the optimizer for model building
         if test_data_generator is not None:
             test_data_size = test_data_generator.get_total_counts()
         else:
@@ -202,34 +217,24 @@ class HybridModel(object):
             merged_summary_op = tf.summary.merge_all()
             with tf.name_scope('training'):
                 while step * self.batch_size < self.num_epochs * data_generator.get_total_counts():
-                    data = data_generator.next_batch(self.batch_size)
-                    sess.run(optimizer, feed_dict={self.x: data.time_series_data,
-                                                   self.meta_x: data.meta_data,
-                                                   self.y: data.target})
+                    train_feed = self._generate_feed(data_generator, dropout_input_keep_prob)
+                    print 'start feeding the data...'
+                    _, step = sess.run([optimizer, self.increment_global_step_op], feed_dict=train_feed)
 
                     if step % self.display_step == 0:
                         # to validate using test data
                         if test_data_generator is not None:
                             # use all the test data every time
-                            test_data = test_data_generator.next_batch(test_data_size)
                             summary, test_MAE = sess.run([merged_summary_op, test_eval_op],
-                                                         feed_dict={self.x: test_data.time_series_data,
-                                                                    self.meta_x: test_data.meta_data,
-                                                                    self.y: test_data.target})
+                                                         feed_dict=self._generate_feed(test_data_generator, 1.))
 
-                            train_MAE = sess.run(train_eval_op,
-                                                feed_dict={self.x: data.time_series_data,
-                                                            self.meta_x: data.meta_data,
-                                                            self.y: data.target})
-
+                            train_MAE = sess.run(train_eval_op, feed_dict=train_feed)
                         else:
-                            summary, train_MAE = sess.run([merged_summary_op, train_eval_op],
-                                                          feed_dict={self.x: data.time_series_data,
-                                                                     self.meta_x: data.meta_data,
-                                                                     self.y: data.target})
+                            summary, train_MAE = sess.run([merged_summary_op, train_eval_op], feed_dict=train_feed)
+
                         writer.add_summary(summary, step)
                         saver.save(sess, os.path.join(self.model_path, 'models'), global_step=step)
-                        print "Iter {}, train MAE: {}, test MAE: {}".format(step * self.batch_size,
+                        print "step {}, train MAE: {}, test MAE: {}".format(step,
                                                                             str(train_MAE),
                                                                             str(test_MAE))
 
