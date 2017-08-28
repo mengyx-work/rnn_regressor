@@ -39,9 +39,9 @@ class SeriesDataGenerator(object):
     def _extract_single_instance(data, time_series_column_names, config_dict, index):
         time_series_data = []
         for column_name_set in time_series_column_names:
-            time_series_data.append(data.loc[index][column_name_set].tolist())
-        meta_data = data.loc[index][config_dict["static_columns"]].tolist()
-        target = [data.loc[index][config_dict["label_column"]]]
+            time_series_data.append(data.iloc[index][column_name_set].tolist())
+        meta_data = data.iloc[index][config_dict["static_columns"]].tolist()
+        target = [data.iloc[index][config_dict["label_column"]]]
         return {'time_series_data': time_series_data, 'meta_data': meta_data, 'target': target}
 
     def next_batch(self, batch_size):
@@ -63,8 +63,9 @@ class SeriesDataGenerator(object):
     def _generate_data_sequence(self, data):
         #data = data.sample(frac=1)
         self.data_sequence = []
-        for index in data.index:
-            instance = self._extract_single_instance(data, self.time_series_column_names, self.config_dict, index)
+        #for index in data.index:
+        for locale_index in xrange(self.total_row_counts):
+            instance = self._extract_single_instance(data, self.time_series_column_names, self.config_dict, locale_index)
             self.data_sequence.append(instance)
 
     def get_total_counts(self):

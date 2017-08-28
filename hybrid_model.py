@@ -58,7 +58,8 @@ class HybridModel(object):
         # Parameters
         self.USE_CPU = True
         self.learning_rate = learning_rate
-        self.batch_size = batch_size
+        #self.batch_size = batch_size
+        self.batch_size = 256
         self.num_epochs = 1500
         #self.test_batch_size = 500
         self.display_step = 2
@@ -228,8 +229,8 @@ class HybridModel(object):
                             train_MAE = sess.run(train_eval_op, feed_dict=train_feed)
                         else:
                             summary, train_MAE = sess.run([merged_summary_op, train_eval_op], feed_dict=train_feed)
-                        writer.add_summary(summary, step)
-                        saver.save(sess, os.path.join(self.model_path, 'models'), global_step=step)
+                        #writer.add_summary(summary, step)
+                        #saver.save(sess, os.path.join(self.model_path, 'models'), global_step=step)
                         cur_time = time.time()
                         print "step {}, train MAE: {}, test MAE: {}, using {:.2f} seconds".format(step,
                                                                                                   str(train_MAE),
