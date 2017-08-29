@@ -60,7 +60,7 @@ class HybridModel(object):
         self.learning_rate = learning_rate
         self.batch_size = batch_size
         #elf.batch_size = 64
-        self.num_epochs = 1500
+        self.num_epochs = 5000
         #self.test_batch_size = 500
         self.display_step = 50
         self.gcs_bucket = GCS_Bucket()
