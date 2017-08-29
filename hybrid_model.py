@@ -156,7 +156,8 @@ class HybridModel(object):
             # reference to simplify the loss:
             # https://stackoverflow.com/questions/33846069/how-to-set-rmse-cost-function-in-tensorflow
             #loss = tf.reduce_sum(tf.squared_difference(self.y, self.pred))  # the RMSE loss
-            loss = tf.reduce_sum(tf.abs(tf.subtract(self.y, self.pred)) / 50.)  # the MAE loss
+            tot_PV_sum = tf.reduce_sum(self.y) / 10.
+            loss = tf.reduce_sum(tf.abs(tf.subtract(self.y, self.pred)) / tot_PV_sum)  # the MAE loss
             self.single_variable_summary(loss, 'objective_func_loss')
         with tf.name_scope('optimizer'):
             #optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(loss)
