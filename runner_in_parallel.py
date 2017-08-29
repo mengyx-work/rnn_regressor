@@ -2,8 +2,8 @@ from run_utils import run_jobs_in_parallel
 
 #common_command_line = ["python", "runner.py"]
 common_command_line = ["python", "multi_fold_runner.py"]
-#learning_rate_list = [0.001, 0.0005, 0.0001]
-learning_rate_list = [0.0001]
+learning_rate_list = [0.001, 0.0005, 0.0001]
+#learning_rate_list = [0.00005]
 batch_size_list = [0]
 job_command_list = []
 model_name_list = []
@@ -18,19 +18,19 @@ for batch_size in batch_size_list:
         #model_name = "target_mean_all_learning_rate_{}_batch_size_{}".format(learning_rate, batch_size)
         #model_name = "column_norm_last_hid32_16-1_learning_rate_{}_MAE".format(learning_rate)
         #model_name = "target_median_last_hid8_4-1_learning_rate_{}_MAE".format(learning_rate)
-        #model_name = "target_median_hid4_4-1_learning_rate_{}_MAE".format(learning_rate)
-        model_name = "target_median_last_hid32_16-1_learning_rate_{}_MAE".format(learning_rate)
-        model_name = "test_special_{}_MAE".format(learning_rate)
+        model_name = "target_median_hid8_1_learning_rate_{}_MAE".format(learning_rate)
+        #model_name = "target_median_last_hid8_32-1_learning_rate_{}_MAE".format(learning_rate)
+        #model_name = "test_special_{}_MAE".format(learning_rate)
         args = {}
         args['--model_name'] = model_name
         args['--learning_rate'] = str(learning_rate)
         args['--batch_size'] = str(batch_size)
-        args['--use_cpu'] = "True"
+        args['--use_cpu'] = "False"
 
         args['--gcs_path'] = GCS_path
         args['--yaml_file_name'] = yaml_file_name
         args['--index_gcs_path'] = yaml_GCS_path
-        args['--fold_num'] = str(1)
+        args['--fold_num'] = str(4)
 
         command_lines = common_command_line[:]
         command_lines.extend(reduce(lambda x, y: x + y, args.items()))

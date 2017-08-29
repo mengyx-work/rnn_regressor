@@ -59,8 +59,7 @@ class HybridModel(object):
         self.USE_CPU = False
         self.learning_rate = learning_rate
         self.batch_size = batch_size
-        #elf.batch_size = 64
-        self.num_epochs = 5000
+        self.num_epochs = 10000
         #self.test_batch_size = 500
         self.display_step = 50
         self.gcs_bucket = GCS_Bucket()
@@ -69,9 +68,9 @@ class HybridModel(object):
         #self.n_hidden = 4  # hidden layer dimension
         #self.FC_layers = [1]
 
-        self.n_hidden = 16  # hidden layer dimension
+        self.n_hidden = 8  # hidden layer dimension
+        self.FC_layers = [1]
         #self.FC_layers = [16, 1]
-        self.FC_layers = [8, 1]
 
         self.n_input = len(config_dict["time_interval_columns"])  # dimension of each time_step input
         self.n_meta_input = len(config_dict["static_columns"])  # dimension of meta input (categorical features)
@@ -142,11 +141,11 @@ class HybridModel(object):
             outputs, states = rnn.static_rnn(lstm_cell, x, dtype=tf.float32, scope='LSTM_unit')
 
             # combine the last LSTM unit output with `meta_X`
-            combined_output = tf.concat([outputs[-1], self.meta_x], 1)
+            #combined_output = tf.concat([outputs[-1], self.meta_x], 1)
 
             # combine all the LSTM unit output with `meta_X`, similar to an attention model
-            #alll_units_output = tf.concat([unit for unit in outputs], 1)
-            #combined_output = tf.concat([alll_units_output, meta_X], 1)
+            alll_units_output = tf.concat([unit for unit in outputs], 1)
+            combined_output = tf.concat([alll_units_output, self.meta_x], 1)
 
             print 'combined output dimension: ', combined_output.shape
             output = tflayers.stack(combined_output, tflayers.fully_connected, self.FC_layers, scope='fully_connect_layer')
