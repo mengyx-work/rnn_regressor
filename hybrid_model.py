@@ -192,7 +192,7 @@ class HybridModel(object):
         optimizer = self._init_optimizer(self.learning_rate)  # the optimizer for model building
 
         if test_data_generator is not None:
-            test_data_size = test_data_generator
+            test_data_size = test_data_generator.total_row_counts
         else:
             test_data_size = self.batch_size
         test_eval_op = self.create_eval_op(test_data_size, 'test_eval')  # eval operation using test data

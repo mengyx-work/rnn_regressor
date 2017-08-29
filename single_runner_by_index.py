@@ -43,7 +43,7 @@ def main():
         model = HybridModel(config_dict,
                             args.model_name,
                             learning_rate=args.learning_rate,
-                            batch_size=data_generator.get_total_counts(),
+                            batch_size=data_generator.total_row_counts,
                             USE_CPU=args.use_cpu)
         model.train(data_generator, test_generator)
         #model.train(data_generator)
