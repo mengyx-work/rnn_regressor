@@ -19,14 +19,30 @@ class SeriesDataGenerator(object):
     """
 
     def __init__(self, data, config_dict):
-        self.data = data
         self.config_dict = config_dict.copy()
         self.index_counter = -1
-        self.total_row_counts = self.get_total_counts()
+        self.total_row_counts = self._get_total_counts(data)
         self.time_series_column_names = self._build_time_series_column_names()
+        self.instance_sequence = self._prepare_instance_sequence(data)
+        self._cur_index = 0
 
-    def get_total_counts(self):
-        return self.data.shape[0]
+    def _prepare_instance_sequence(self, data):
+        data = data.sample(frac=1)
+        instance_sequence = []
+        for index in xrange(self.total_row_counts):
+            instance = {}
+            instance_time_series = []
+            for column_name_set in self.time_series_column_names:
+                instance_time_series.append(data.iloc[index][column_name_set].tolist())
+            instance['time_series_data'] = instance_time_series
+            instance['meta_data'] = data.iloc[index][self.config_dict["static_columns"]].tolist()
+            instance['target'] = [data.iloc[index][self.config_dict["label_column"]]]
+            instance_sequence.append(instance)
+        return instance_sequence
+
+    @staticmethod
+    def _get_total_counts(data):
+        return data.shape[0]
 
     def _build_time_series_column_names(self):
         column_names = []
@@ -37,36 +53,22 @@ class SeriesDataGenerator(object):
             column_names.append(single_step_column_name)
         return column_names
 
-    def _next_index(self):
-        self.index_counter += 1
-        if self.index_counter >= self.total_row_counts:
-            self.index_counter = self.index_counter - self.total_row_counts
-            return self.index_counter
-        else:
-            return self.index_counter
-
-    def _batch_index(self, batch_size):
-        index_list = []
-        for _ in range(batch_size):
-            index_list.append(self._next_index())
-        return index_list
-
-    def _extract_time_series_data(self, index_list):
-        data = []
-        for index in index_list:
-            instance = []
-            for column_name_set in self.time_series_column_names:
-                instance.append(self.data.iloc[index][column_name_set].tolist())
-            data.append(instance)
-        return data
+    @staticmethod
+    def _add_instances_by_index(instance_sequence, start_index, end_index, time_series_data_array, meta_data_array, target_array):
+        for index in xrange(start_index, end_index):
+            time_series_data_array.append(instance_sequence[index]['time_series_data'])
+            meta_data_array.append(instance_sequence[index]['meta_data'])
+            target_array.append(instance_sequence[index]['target'])
 
     def next_batch(self, batch_size):
-        index_list = self._batch_index(batch_size)
-        # build the time_series variables
-        time_series_data = self._extract_time_series_data(index_list)
-        # build the meta_data and target
-        meta_data, target = [], []
-        for cur_index in index_list:
-            meta_data.append(self.data.iloc[cur_index][self.config_dict["static_columns"]].tolist())
-            target.append([self.data.iloc[cur_index][self.config_dict["label_column"]]])
+        time_series_data, meta_data, target = [], [], []
+        if self._cur_index + batch_size <= self.total_row_counts:
+            start_index = self._cur_index
+            self._cur_index += batch_size
+            self._add_instances_by_index(self.instance_sequence, start_index, self._cur_index, time_series_data, meta_data, target)
+        else:
+            start_index = self._cur_index
+            self._cur_index = self._cur_index + batch_size - self.total_row_counts
+            self._add_instances_by_index(self.instance_sequence, start_index, self.total_row_counts, time_series_data, meta_data, target)
+            self._add_instances_by_index(self.instance_sequence, 0, self._cur_index, time_series_data, meta_data, target)
         return train_data(time_series_data=time_series_data, meta_data=meta_data, target=target)

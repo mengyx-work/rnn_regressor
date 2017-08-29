@@ -46,6 +46,7 @@ def main():
                             batch_size=data_generator.get_total_counts(),
                             USE_CPU=args.use_cpu)
         model.train(data_generator, test_generator)
+        #model.train(data_generator)
     except Exception, e:
         print "found the exception {} in model training.".format(e)
     finally:

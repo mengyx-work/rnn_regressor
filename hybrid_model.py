@@ -13,7 +13,7 @@ from tensorflow.contrib import layers as tflayers
 
 def model_predict(data, config_dict, local_model_path, pred_op_name):
     data_generator = SeriesDataGenerator(data, config_dict)
-    data = data_generator.next_batch(data_generator.get_total_counts())
+    data = data_generator.next_batch(data_generator.total_row_counts)
     saver = tf.train.import_meta_graph(model_meta_file(local_model_path))
     with tf.Session() as sess:
         saver.restore(sess, tf.train.latest_checkpoint(local_model_path))
@@ -58,20 +58,20 @@ class HybridModel(object):
         # Parameters
         self.USE_CPU = True
         self.learning_rate = learning_rate
-        #self.batch_size = batch_size
-        self.batch_size = 256
+        self.batch_size = batch_size
+        #elf.batch_size = 64
         self.num_epochs = 1500
         #self.test_batch_size = 500
-        self.display_step = 2
+        self.display_step = 50
         self.gcs_bucket = GCS_Bucket()
 
 
         #self.n_hidden = 4  # hidden layer dimension
         #self.FC_layers = [1]
 
-        self.n_hidden = 32  # hidden layer dimension
-        self.FC_layers = [16, 1]
-#        self.FC_layers = [8, 1]
+        self.n_hidden = 16  # hidden layer dimension
+        #self.FC_layers = [16, 1]
+        self.FC_layers = [8, 1]
 
         self.n_input = len(config_dict["time_interval_columns"])  # dimension of each time_step input
         self.n_meta_input = len(config_dict["static_columns"])  # dimension of meta input (categorical features)
@@ -174,8 +174,8 @@ class HybridModel(object):
             #print 'eval_op name: ',  eval_op.name
         return eval_op
 
-    def _generate_feed(self, data_generator, dropout_input_keep_prob=1.):
-        data = data_generator.next_batch(self.batch_size)
+    def _generate_feed(self, data_generator, batch_size, dropout_input_keep_prob=1.):
+        data = data_generator.next_batch(batch_size)
         return {self.x: data.time_series_data,
                 self.meta_x: data.meta_data,
                 self.y: data.target,
@@ -192,7 +192,7 @@ class HybridModel(object):
         optimizer = self._init_optimizer(self.learning_rate)  # the optimizer for model building
 
         if test_data_generator is not None:
-            test_data_size = test_data_generator.get_total_counts()
+            test_data_size = test_data_generator
         else:
             test_data_size = self.batch_size
         test_eval_op = self.create_eval_op(test_data_size, 'test_eval')  # eval operation using test data
@@ -217,15 +217,17 @@ class HybridModel(object):
             '''
             merged_summary_op = tf.summary.merge_all()
             with tf.name_scope('training'):
-                while step * self.batch_size < self.num_epochs * data_generator.get_total_counts():
-                    train_feed = self._generate_feed(data_generator, dropout_input_keep_prob)
+                while step * self.batch_size < self.num_epochs * data_generator.total_row_counts:
+                    train_feed = self._generate_feed(data_generator, self.batch_size, dropout_input_keep_prob)
                     _, step = sess.run([optimizer, self.increment_global_step_op], feed_dict=train_feed)
                     if step % self.display_step == 0:
                         # to validate using test data
                         if test_data_generator is not None:
                             # use all the test data every time
                             summary, test_MAE = sess.run([merged_summary_op, test_eval_op],
-                                                         feed_dict=self._generate_feed(test_data_generator, 1.))
+                                                         feed_dict=self._generate_feed(test_data_generator,
+                                                                                       test_data_generator.total_row_counts,
+                                                                                       1.))
                             train_MAE = sess.run(train_eval_op, feed_dict=train_feed)
                         else:
                             summary, train_MAE = sess.run([merged_summary_op, train_eval_op], feed_dict=train_feed)
