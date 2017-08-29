@@ -56,7 +56,7 @@ class HybridModel(object):
 
     def __init__(self, config_dict, model_name='hybrid_model', learning_rate=0.001, batch_size=20, USE_CPU=True):
         # Parameters
-        self.USE_CPU = True
+        self.USE_CPU = False
         self.learning_rate = learning_rate
         self.batch_size = batch_size
         #elf.batch_size = 64
@@ -157,7 +157,7 @@ class HybridModel(object):
             # reference to simplify the loss:
             # https://stackoverflow.com/questions/33846069/how-to-set-rmse-cost-function-in-tensorflow
             #loss = tf.reduce_sum(tf.squared_difference(self.y, self.pred))  # the RMSE loss
-            loss = tf.reduce_sum(tf.abs(tf.subtract(self.y, self.pred)))  # the MAE loss
+            loss = tf.reduce_sum(tf.abs(tf.subtract(self.y, self.pred)) / 50.)  # the MAE loss
             self.single_variable_summary(loss, 'objective_func_loss')
         with tf.name_scope('optimizer'):
             #optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.learning_rate).minimize(loss)
