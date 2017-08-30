@@ -9,12 +9,16 @@ train_data = collections.namedtuple('train_data', ['time_series_data',
 
 def model_meta_file(model_path, file_prefix="final_model"):
     meta_files = [f for f in os.listdir(model_path) if f[-5:] == '.meta']
+    '''
     final_model_files = [f for f in meta_files if file_prefix in f]
     if len(final_model_files) == 0:
         raise ValueError("failed to find any model meta files in {}".format(model_path))
     if len(final_model_files) > 1:
         print "warning, more than one model meta file is found in {}".format(model_path)
-    return os.path.join(model_path, final_model_files[0])
+    '''
+    if len(meta_files) == 0:
+        raise ValueError("failed to find any model meta files in {}".format(model_path))
+    return os.path.join(model_path, meta_files[0])
 
 
 def process_target_list(nested_list):
