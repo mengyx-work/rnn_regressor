@@ -36,7 +36,9 @@ class SeriesDataGenerator(object):
                 instance_time_series.append(data.iloc[index][column_name_set].tolist())
             instance['time_series_data'] = instance_time_series
             instance['meta_data'] = data.iloc[index][self.config_dict["static_columns"]].tolist()
-            instance['target'] = [data.iloc[index][self.config_dict["label_column"]]]
+            # for the regression model, individual target needs to be as [[target1], [target2], ...]
+            #instance['target'] = [data.iloc[index][self.config_dict["label_column"]]]
+            instance['target'] = data.iloc[index][self.config_dict["label_column"]]
             instance_sequence.append(instance)
         return instance_sequence
 
@@ -61,6 +63,8 @@ class SeriesDataGenerator(object):
             target_array.append(instance_sequence[index]['target'])
 
     def next_batch(self, batch_size):
+        if batch_size > self.total_row_counts:
+            raise ValueError("the batch size {} exceeds the total_row_counts {}".format(batch_size, self.total_row_counts))
         time_series_data, meta_data, target = [], [], []
         if self._cur_index + batch_size <= self.total_row_counts:
             start_index = self._cur_index
