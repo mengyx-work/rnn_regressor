@@ -53,7 +53,7 @@ def _init_placeholders(rnn_n_steps, rnn_input_length, meta_x_length):
     return placeholders
 
 
-def _init_graph(placeholders, rnn_n_steps, rnn_hidden_state_length, num_class=5):
+def _init_graph(placeholders, rnn_n_steps, rnn_hidden_state_length, num_class=4):
     with tf.name_scope('graph'):
         x = tf.unstack(placeholders['input_x'], rnn_n_steps, 1)
         # Define a LSTM cell
@@ -174,41 +174,41 @@ def main():
     '''
 
 
-    #'''
+    '''
     train_data = pd.read_csv(os.path.join(os.path.expanduser("~"), data_file), nrows=100)
     #train_data = pd.read_csv(os.path.join(os.path.expanduser("~"), data_file))
     print train_data.shape
     with open(os.path.join(os.path.expanduser("~"), yaml_file), 'r') as yaml_file:
         config_dict = yaml.load(yaml_file)
-    #'''
-
-
     '''
+
+
+    #'''
     gcs_path = 'test/MachineLearning'
     index_gcs_path = 'test/MachineLearning/index_yaml'
-    yaml_file_name = 'const_norm_binary_configuration.yaml'
+    yaml_file_name = 'const_norm_4_bracket_configuration.yaml'
     index_file_name = 'NYDN_hybrid_model_fold_2.yaml'
 
     config_dict, local_data_file = load_training_data_from_gcs(gcs_path, yaml_file_name)
     bucket = GCS_Bucket()
     index_dict = load_yaml_file_from_gcs(bucket, index_gcs_path, index_file_name)
     train_data, valid_data = create_train_test_by_index(local_data_file, config_dict, index_dict)
-    '''
+    #'''
     data_generator = SeriesDataGenerator(train_data, config_dict)
-    #test_data_generator = SeriesDataGenerator(valid_data, config_dict)
+    test_data_generator = SeriesDataGenerator(valid_data, config_dict)
 
     rnn_input_length = len(config_dict["time_interval_columns"])
     rnn_n_steps = len(config_dict["time_step_list"])
     meta_x_length = len(config_dict["static_columns"])
     rnn_hidden_state_length = 8
-    learning_rate = 0.0001
+    learning_rate = 0.00001
     eval_op_list = []
     COMMON_PATH = os.path.join(os.path.expanduser("~"), 'local_tensorflow_content')
 
     class ClassifierModelConfig():
         pass
     model_config = ClassifierModelConfig()
-    model_config.model_name = 'test_binary_model'
+    model_config.model_name = 'bracket_4_binary_model'
     model_config.batch_size = 256
     model_config.num_epochs = 5000
     model_config.display_step = 1000
@@ -217,10 +217,7 @@ def main():
     model_config.log_path = create_local_log_path(COMMON_PATH, model_config.model_name)
 
     placeholders = _init_placeholders(rnn_n_steps, rnn_input_length, meta_x_length)
-    for key in placeholders:
-        print 'the placeholder {} :'.format(key), placeholders[key]
     softmax_linear = _init_graph(placeholders, rnn_n_steps, rnn_hidden_state_length)
-    print 'the pred op: ', softmax_linear
     loss = _compute_loss(softmax_linear, placeholders['input_y'])
     variable_summary(loss, 'training_loss')
     eval_op_list.append(loss)
